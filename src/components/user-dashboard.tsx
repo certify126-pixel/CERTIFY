@@ -29,7 +29,7 @@ export function UserDashboard() {
                 <p className="mb-6">
                     Quickly and easily verify academic certificates to ensure their authenticity. Click the button below to get started.
                 </p>
-                <VerifyCertificateDialog onVerificationComplete={handleVerificationComplete}>
+                <VerifyCertificateDialog onVerificationComplete={(result, details) => handleVerificationComplete(result)}>
                     <Button size="lg">
                         <FileCheck className="mr-2 h-5 w-5" />
                         Verify a Certificate Now

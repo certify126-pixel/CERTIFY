@@ -34,7 +34,7 @@ export type VerificationHistoryItem = VerifyCertificateOutput & {
 
 type VerifyCertificateDialogProps = {
   children: React.ReactNode;
-  onVerificationComplete?: (result: VerificationHistoryItem) => void;
+  onVerificationComplete?: (result: VerificationHistoryItem, details: Record<string, string>) => void;
   allCertificates?: CertificateRecord[];
 };
 
@@ -73,11 +73,26 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
     }
   }
 
+  const handleVerificationResult = (result: VerifyCertificateOutput, submittedDetails: Record<string, string>) => {
+     setVerificationResult(result);
+        if (onVerificationComplete) {
+            const historyItem: VerificationHistoryItem = {
+                ...result,
+                id: crypto.randomUUID(),
+                certificateId: submittedDetails.certificateId || "N/A",
+                timestamp: new Date().toISOString(),
+            };
+            onVerificationComplete(historyItem, submittedDetails);
+        }
+  }
+
 
   const handleSubmitManual = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
     setVerificationResult(null);
+
+    const submittedDetails = { rollNumber, certificateId, issueDate };
 
     // Calculate hash from inputs
     const hash = createHash('sha256');
@@ -86,21 +101,11 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
 
     try {
         const result = await verifyCertificate({
-            rollNumber,
-            certificateId,
-            issueDate,
+            ...submittedDetails,
             certificateHash,
             allCertificates,
         });
-        setVerificationResult(result);
-        if (onVerificationComplete) {
-            onVerificationComplete({
-                ...result,
-                id: crypto.randomUUID(),
-                certificateId: certificateId,
-                timestamp: new Date().toISOString(),
-            });
-        }
+        handleVerificationResult(result, submittedDetails);
     } catch(error) {
         toast({
             variant: "destructive",
@@ -130,15 +135,22 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
             photoDataUri: filePreview,
             allCertificates,
         });
-        setVerificationResult(result);
-        if (onVerificationComplete) {
-            onVerificationComplete({
-                ...result,
-                id: crypto.randomUUID(),
-                certificateId: result.certificateDetails?.studentName || "N/A", // Not ideal, but OCR doesn't give us one
-                timestamp: new Date().toISOString(),
-            });
+        
+        let submittedDetails = {
+            certificateId: "N/A",
+            rollNumber: "N/A",
+            issueDate: "N/A",
+        };
+        // This is a bit of a hack, since the OCR flow doesn't return the extracted text directly
+        // In a real app, the flow would be adjusted to return this.
+        if (result.message.includes('details do not match')) {
+             // We can assume some details were extracted but didn't match.
+        } else if (result.certificateDetails) {
+            // This is not available on failure, so we can't get it for blacklisting.
         }
+
+        handleVerificationResult(result, submittedDetails);
+
     } catch(error: any) {
         toast({
             variant: "destructive",

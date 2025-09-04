@@ -30,6 +30,7 @@ import {
   User,
   XCircle,
   Loader2,
+  ShieldX,
 } from "lucide-react";
 import { summarizeVerificationResults } from "@/ai/flows/summarize-verification-results";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
@@ -38,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { VerificationHistoryItem } from "./verify-certificate-dialog";
 
 type VerificationLog = {
   id: string;
@@ -85,10 +87,26 @@ const StatusBadge = ({ status }: { status: VerificationLog["status"] }) => {
   );
 };
 
+export type BlacklistItem = {
+    id: string;
+    reason: string;
+    certificateDetails: Record<string, string>;
+    timestamp: string;
+}
 
 export function AdminDashboard() {
   const [summary, setSummary] = React.useState<string | null>(null);
   const [isGenerating, startTransition] = React.useTransition();
+  const [blacklist, setBlacklist] = React.useState<BlacklistItem[]>([]);
+
+  const handleAddToBlacklist = (item: VerificationHistoryItem, details: Record<string, string>) => {
+    setBlacklist(prev => [...prev, {
+        id: item.id,
+        reason: item.message,
+        certificateDetails: details,
+        timestamp: item.timestamp,
+    }]);
+  };
 
   const handleGenerateSummary = async () => {
     startTransition(async () => {
@@ -144,6 +162,44 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+      
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-3">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ShieldX /> Blacklisted Certificates</CardTitle>
+                <CardDescription>Certificates that failed verification and are suspected of being fraudulent.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {blacklist.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-10">
+                        <p>The blacklist is currently empty.</p>
+                    </div>
+                ) : (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Certificate ID</TableHead>
+                            <TableHead>Roll Number</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Date Flagged</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {blacklist.map((item) => (
+                        <TableRow key={item.id} className="bg-destructive/10">
+                            <TableCell className="font-medium">{item.certificateDetails.certificateId}</TableCell>
+                            <TableCell>{item.certificateDetails.rollNumber}</TableCell>
+                            <TableCell className="text-destructive">{item.reason}</TableCell>
+                            <TableCell>{new Date(item.timestamp).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                )}
+            </CardContent>
+            </Card>
+        </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">

@@ -143,10 +143,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Blacklist">
-                            <ShieldX />
-                            <span>Blacklist</span>
-                        </SidebarMenuButton>
+                        <Link href="/blacklist" passHref>
+                            <SidebarMenuButton tooltip="Blacklist" isActive={pathname === '/blacklist'}>
+                                <ShieldX />
+                                <span>Blacklist</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                 </>
             )}
