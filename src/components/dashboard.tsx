@@ -41,10 +41,14 @@ import {
   CheckCircle2,
   FileCheck,
   FileClock,
+  FileText,
   FileX2,
+  Home,
+  Info,
   LayoutDashboard,
   Loader2,
   LogOut,
+  Mail,
   ScanEye,
   ShieldX,
   User,
@@ -60,6 +64,7 @@ import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from 'next/link';
 
 type VerificationLog = {
   id: string;
@@ -155,6 +160,14 @@ export function Dashboard() {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
+                <Link href="/" passHref>
+                  <SidebarMenuButton tooltip="Home">
+                    <Home />
+                    <span>Home</span>
+                  </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton isActive tooltip="Dashboard">
                 <LayoutDashboard />
                 <span>Dashboard</span>
@@ -177,6 +190,30 @@ export function Dashboard() {
                 <ShieldX />
                 <span>Blacklist</span>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/about" passHref>
+                  <SidebarMenuButton tooltip="About Us">
+                    <Info />
+                    <span>About Us</span>
+                  </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/privacy" passHref>
+                  <SidebarMenuButton tooltip="Privacy Policy">
+                    <FileText />
+                    <span>Privacy Policy</span>
+                  </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/contact" passHref>
+                  <SidebarMenuButton tooltip="Contact Us">
+                    <Mail />
+                    <span>Contact Us</span>
+                  </SidebarMenuButton>
+                </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
