@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import {
   Card,
   CardContent,
@@ -28,7 +29,10 @@ import {
   FileClock,
   FileCheck,
   User,
+  Loader2,
 } from "lucide-react";
+import { addCertificate } from "@/ai/flows/add-certificate-flow";
+import { useToast } from "@/hooks/use-toast";
 
 const issuedCertificates = [
   { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", issueDate: "2023-05-20", status: "Issued" },
@@ -39,6 +43,63 @@ const issuedCertificates = [
 ];
 
 export function InstitutionDashboard() {
+  const { toast } = useToast();
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [studentName, setStudentName] = React.useState("");
+  const [rollNumber, setRollNumber] = React.useState("");
+  const [certificateId, setCertificateId] = React.useState("");
+  const [issueDate, setIssueDate] = React.useState("");
+  const [course, setCourse] = React.useState("");
+  const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
+
+  const handleCreateCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentName || !rollNumber || !certificateId || !issueDate || !course) {
+        toast({
+            variant: "destructive",
+            title: "Missing Fields",
+            description: "Please fill out all the fields to create a certificate.",
+        });
+        return;
+    }
+    setIsCreating(true);
+    try {
+        const result = await addCertificate({
+            studentName,
+            rollNumber,
+            certificateId,
+            issueDate,
+            course,
+            institution,
+        });
+
+        if (result.success) {
+            toast({
+                title: "Certificate Created",
+                description: `Certificate for ${studentName} has been successfully created. Hash: ${result.certificateHash.substring(0,10)}...`,
+            });
+            // Clear form
+            setStudentName("");
+            setRollNumber("");
+            setCertificateId("");
+            setIssueDate("");
+            setCourse("");
+
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Creation Failed",
+            description: error.message || "An unexpected error occurred.",
+        });
+    } finally {
+        setIsCreating(false);
+    }
+  };
+
+
   return (
     <main className="flex-1 p-6 space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -145,23 +206,33 @@ export function InstitutionDashboard() {
               <CardTitle>Create Single Certificate</CardTitle>
               <CardDescription>Manually create a single new certificate record.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="student-name">Student Name</Label>
-                    <Input id="student-name" placeholder="e.g., Jane Doe" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="certificate-id">Certificate ID</Label>
-                    <Input id="certificate-id" placeholder="e.g., JHU-12345-2024" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="issue-date">Issue Date</Label>
-                    <Input id="issue-date" type="date" />
-                </div>
-              <Button className="w-full">
-                <FileCheck className="mr-2 h-4 w-4" />
-                Create Certificate
-              </Button>
+            <CardContent>
+                <form onSubmit={handleCreateCertificate} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="student-name">Student Name</Label>
+                        <Input id="student-name" value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="e.g., Jane Doe" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="roll-number">Roll Number</Label>
+                        <Input id="roll-number" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} placeholder="e.g., CS-12345" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="course-name">Course Name</Label>
+                        <Input id="course-name" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="e.g., B.Tech in Computer Science" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="certificate-id">Certificate ID</Label>
+                        <Input id="certificate-id" value={certificateId} onChange={(e) => setCertificateId(e.target.value)} placeholder="e.g., JHU-12345-2024" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="issue-date">Issue Date</Label>
+                        <Input id="issue-date" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} required />
+                    </div>
+                  <Button type="submit" className="w-full" disabled={isCreating}>
+                    {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
+                    {isCreating ? "Creating..." : "Create Certificate"}
+                  </Button>
+                </form>
             </CardContent>
           </Card>
         </div>
@@ -169,3 +240,5 @@ export function InstitutionDashboard() {
     </main>
   );
 }
+
+    
