@@ -58,6 +58,8 @@ import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type VerificationLog = {
   id: string;
@@ -335,12 +337,3 @@ export function Dashboard() {
     </SidebarProvider>
   );
 }
-
-// cn function for combining classnames
-function cn(...inputs: (string | undefined | null | false)[]): string {
-  return inputs.filter(Boolean).join(' ');
-}
-
-const Skeleton = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn("animate-pulse rounded-md bg-muted/50", className)} {...props} />
-);
