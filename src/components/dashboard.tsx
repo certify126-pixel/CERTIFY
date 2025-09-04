@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,18 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
@@ -39,32 +21,18 @@ import {
   Bot,
   Building,
   CheckCircle2,
-  FileCheck,
   FileClock,
-  FileText,
   FileX2,
-  Home,
-  Info,
-  LayoutDashboard,
-  Loader2,
-  LogOut,
-  Mail,
   ScanEye,
-  ShieldX,
   User,
   XCircle,
+  Loader2,
 } from "lucide-react";
-import { CertiCheckLogo } from "@/components/icons";
-import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
 import { summarizeVerificationResults } from "@/ai/flows/summarize-verification-results";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { useAuth } from "@/context/AuthContext";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import Link from 'next/link';
+import { Button } from "./ui/button";
 
 type VerificationLog = {
   id: string;
@@ -114,8 +82,6 @@ const StatusBadge = ({ status }: { status: VerificationLog["status"] }) => {
 
 
 export function Dashboard() {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [summary, setSummary] = React.useState<string | null>(null);
   const [isGenerating, startTransition] = React.useTransition();
 
@@ -129,250 +95,122 @@ export function Dashboard() {
     });
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Logout Failed",
-        description: "An error occurred while logging out.",
-      });
-    }
-  };
-
-
   return (
-    <SidebarProvider>
-      <Sidebar variant="sidebar" collapsible="icon" className="border-r border-sidebar-border/50">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
-            <CertiCheckLogo className="w-8 h-8 text-primary" />
-            <h1 className="font-headline text-lg font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-              CertiCheck
-            </h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-                <Link href="/" passHref>
-                  <SidebarMenuButton tooltip="Home">
-                    <Home />
-                    <span>Home</span>
-                  </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton isActive tooltip="Dashboard">
-                <LayoutDashboard />
-                <span>Dashboard</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Institutions">
-                <Building />
-                <span>Institutions</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Verifications">
-                <ScanEye />
-                <span>Verifications</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Blacklist">
-                <ShieldX />
-                <span>Blacklist</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <Link href="/about" passHref>
-                  <SidebarMenuButton tooltip="About Us">
-                    <Info />
-                    <span>About Us</span>
-                  </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <Link href="/privacy" passHref>
-                  <SidebarMenuButton tooltip="Privacy Policy">
-                    <FileText />
-                    <span>Privacy Policy</span>
-                  </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <Link href="/contact" passHref>
-                  <SidebarMenuButton tooltip="Contact Us">
-                    <Mail />
-                    <span>Contact Us</span>
-                  </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
-                        <LogOut />
-                        <span>Logout</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-          <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
-             <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
-              <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt="Admin" />
-              <AvatarFallback>SA</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-semibold text-sidebar-foreground truncate">{user?.email}</span>
-              <span className="text-xs text-sidebar-foreground/70">Super Admin</span>
-            </div>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b bg-card">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="md:hidden" />
-            <h1 className="font-headline text-2xl font-bold text-foreground">
-              Admin Dashboard
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <VerifyCertificateDialog>
-              <Button>
-                <FileCheck className="mr-2 h-4 w-4" />
-                Verify Certificate
-              </Button>
-            </VerifyCertificateDialog>
-          </div>
-        </header>
+    <main className="flex-1 p-6 space-y-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Verifications</CardTitle>
+            <ScanEye className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,234</div>
+            <p className="text-xs text-muted-foreground">+5.2% from last month</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Forgeries Detected</CardTitle>
+            <FileX2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">42</div>
+            <p className="text-xs text-muted-foreground">+12.1% from last month</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Institutions Onboard</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">27</div>
+            <p className="text-xs text-muted-foreground">+2 since last month</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Verifiers</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">152</div>
+            <p className="text-xs text-muted-foreground">Active this week</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <main className="flex-1 p-6 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Verifications</CardTitle>
-                <ScanEye className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,234</div>
-                <p className="text-xs text-muted-foreground">+5.2% from last month</p>
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Forgeries Detected</CardTitle>
-                <FileX2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">42</div>
-                <p className="text-xs text-muted-foreground">+12.1% from last month</p>
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Institutions Onboard</CardTitle>
-                <Building className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">27</div>
-                <p className="text-xs text-muted-foreground">+2 since last month</p>
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Verifiers</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">152</div>
-                <p className="text-xs text-muted-foreground">Active this week</p>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Verification Logs</CardTitle>
+            <CardDescription>An overview of the latest certificate verification attempts.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Certificate ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Verifier</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {verificationLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-medium">{log.certificateId}</TableCell>
+                    <TableCell>{log.studentName}</TableCell>
+                    <TableCell><StatusBadge status={log.status} /></TableCell>
+                    <TableCell>{log.date}</TableCell>
+                    <TableCell>{log.verifier}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Recent Verification Logs</CardTitle>
-                <CardDescription>An overview of the latest certificate verification attempts.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Certificate ID</TableHead>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Verifier</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {verificationLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell className="font-medium">{log.certificateId}</TableCell>
-                        <TableCell>{log.studentName}</TableCell>
-                        <TableCell><StatusBadge status={log.status} /></TableCell>
-                        <TableCell>{log.date}</TableCell>
-                        <TableCell>{log.verifier}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Fraud Analysis</CardTitle>
+            <CardDescription>AI-powered summary of verification logs to identify trends and potential fraud.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={handleGenerateSummary} disabled={isGenerating} className="w-full">
+              {isGenerating ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>
+              ) : (
+                <><Bot className="mr-2 h-4 w-4" /> Generate Fraud Report</>
+              )}
+            </Button>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Fraud Analysis</CardTitle>
-                <CardDescription>AI-powered summary of verification logs to identify trends and potential fraud.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button onClick={handleGenerateSummary} disabled={isGenerating} className="w-full">
-                  {isGenerating ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>
-                  ) : (
-                    <><Bot className="mr-2 h-4 w-4" /> Generate Fraud Report</>
-                  )}
-                </Button>
-
-                {isGenerating && (
-                    <div className="space-y-3 pt-2">
-                        <div className="flex items-center space-x-2">
-                            <Skeleton className="h-8 w-8 rounded-full" />
-                            <Skeleton className="h-4 w-1/4" />
-                        </div>
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-4/5" />
-                        <Skeleton className="h-4 w-full" />
+            {isGenerating && (
+                <div className="space-y-3 pt-2">
+                    <div className="flex items-center space-x-2">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-1/4" />
                     </div>
-                )}
-                
-                {summary && (
-                  <Alert className="bg-primary/5 border-primary/20">
-                    <Bot className="h-4 w-4 text-primary" />
-                    <AlertTitle className="text-primary font-headline">AI Summary</AlertTitle>
-                    <AlertDescription className="text-primary/80 whitespace-pre-wrap">
-                      {summary}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <Skeleton className="h-4 w-full" />
+                </div>
+            )}
+            
+            {summary && (
+              <Alert className="bg-primary/5 border-primary/20">
+                <Bot className="h-4 w-4 text-primary" />
+                <AlertTitle className="text-primary font-headline">AI Summary</AlertTitle>
+                <AlertDescription className="text-primary/80 whitespace-pre-wrap">
+                  {summary}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </main>
   );
 }

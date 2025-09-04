@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto p-8 flex justify-center">
+    <main className="flex-1 p-6 flex justify-center">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="font-headline text-4xl">Contact Us</CardTitle>
@@ -39,6 +39,6 @@ export default function ContactPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

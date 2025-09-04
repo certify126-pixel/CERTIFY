@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="container mx-auto p-8">
+    <main className="flex-1 p-6">
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-4xl">Privacy Policy</CardTitle>
@@ -53,6 +53,6 @@ export default function PrivacyPolicyPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

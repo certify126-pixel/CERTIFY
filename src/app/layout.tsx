@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import AppLayout from '@/components/AppLayout';
 
 export const metadata: Metadata = {
   title: 'CertiCheck Jharkhand',
@@ -22,7 +23,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
+          <AppLayout>
+            {children}
+          </AppLayout>
         </AuthProvider>
         <Toaster />
       </body>
