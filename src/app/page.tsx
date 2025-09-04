@@ -9,6 +9,9 @@ import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const { user, loading } = useAuth();
+
+  // If you want to re-enable authentication, uncomment the following lines
+  /*
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +27,7 @@ export default function Home() {
       </div>
     );
   }
+  */
 
   return <Dashboard />;
 }
