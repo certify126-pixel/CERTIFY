@@ -4,3 +4,4 @@ config();
 import '@/ai/flows/summarize-verification-results.ts';
 import '@/ai/flows/add-certificate-flow.ts';
 import '@/ai/flows/verify-certificate-flow.ts';
+import '@/ai/flows/verify-certificate-with-ocr-flow.ts';
