@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle, FileCheck } from "lucide-react";
 import React from "react";
 import { verifyCertificate, VerifyCertificateOutput, VerifyCertificateInput } from "@/ai/flows/verify-certificate-flow";
+import { createHash } from 'crypto';
 
-type CertificateRecord = Omit<VerifyCertificateInput, 'certificateHash' | 'allCertificates'> & {id: string; status: string};
+
+type CertificateRecord = Omit<VerifyCertificateInput, 'certificateHash' | 'allCertificates'> & {id: string; status: string; studentName: string; course: string; institution: string;};
+
 
 export type VerificationHistoryItem = VerifyCertificateOutput & {
     id: string;
@@ -42,14 +46,12 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
   const [rollNumber, setRollNumber] = React.useState("");
   const [certificateId, setCertificateId] = React.useState("");
   const [issueDate, setIssueDate] = React.useState("");
-  const [certificateHash, setCertificateHash] = React.useState("");
 
 
   const resetForm = () => {
     setRollNumber("");
     setCertificateId("");
     setIssueDate("");
-    setCertificateHash("");
     setVerificationResult(null);
   };
 
@@ -58,6 +60,11 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
     e.preventDefault();
     setIsVerifying(true);
     setVerificationResult(null);
+
+    // Calculate hash from inputs
+    const hash = createHash('sha256');
+    hash.update(rollNumber + certificateId + issueDate);
+    const certificateHash = hash.digest('hex');
 
     try {
         const result = await verifyCertificate({
@@ -102,7 +109,7 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
           <DialogHeader>
             <DialogTitle className="font-headline text-2xl flex items-center gap-2"><FileCheck /> Verify Certificate</DialogTitle>
             <DialogDescription>
-              Enter the certificate details and its unique hash to verify its authenticity.
+              Enter the certificate details to verify its authenticity. The system will perform a secure check internally.
             </DialogDescription>
           </DialogHeader>
           
@@ -124,12 +131,6 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
                 Issue Date
               </Label>
               <Input id="issueDate" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="col-span-3" required/>
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="certificateHash" className="text-right">
-                Certificate Hash
-              </Label>
-              <Input id="certificateHash" value={certificateHash} onChange={(e) => setCertificateHash(e.target.value)} placeholder="SHA-256 Hash" className="col-span-3" required/>
             </div>
           </div>
 
