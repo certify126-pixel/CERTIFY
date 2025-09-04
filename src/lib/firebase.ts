@@ -1,14 +1,15 @@
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  projectId: "certicheck-jharkhand",
-  appId: "1:336211913773:web:f9ce0445a7aa9bc000dca4",
-  storageBucket: "certicheck-jharkhand.firebasestorage.app",
-  apiKey: "AIzaSyA0HtcjxK0_2Lg5Yc3ndy0n78KklpP9eSs",
-  authDomain: "certicheck-jharkhand.firebaseapp.com",
-  messagingSenderId: "336211913773",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
