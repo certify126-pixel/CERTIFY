@@ -44,6 +44,7 @@ import {
   FileX2,
   LayoutDashboard,
   Loader2,
+  LogOut,
   ScanEye,
   ShieldX,
   User,
@@ -53,6 +54,10 @@ import { CertiCheckLogo } from "@/components/icons";
 import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
 import { summarizeVerificationResults } from "@/ai/flows/summarize-verification-results";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { useAuth } from "@/context/AuthContext";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 type VerificationLog = {
   id: string;
@@ -102,6 +107,8 @@ const StatusBadge = ({ status }: { status: VerificationLog["status"] }) => {
 
 
 export function Dashboard() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [summary, setSummary] = React.useState<string | null>(null);
   const [isGenerating, startTransition] = React.useTransition();
 
@@ -113,6 +120,22 @@ export function Dashboard() {
         setSummary(result.summary);
       }
     });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Logout Failed",
+        description: "An error occurred while logging out.",
+      });
+    }
   };
 
 
@@ -156,14 +179,22 @@ export function Dashboard() {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <div className="flex items-center gap-3 p-3">
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                        <LogOut />
+                        <span>Logout</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+          <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
              <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
               <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt="Admin" />
               <AvatarFallback>SA</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-semibold text-sidebar-foreground">Super Admin</span>
-              <span className="text-xs text-sidebar-foreground/70">admin@jh.gov.in</span>
+              <span className="font-semibold text-sidebar-foreground truncate">{user?.email}</span>
+              <span className="text-xs text-sidebar-foreground/70">Super Admin</span>
             </div>
           </div>
         </SidebarFooter>
