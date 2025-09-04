@@ -38,8 +38,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!user) {
           const mockUser = {
               uid: 'mock-user-uid',
-              email: 'super.admin@certicheck.dev',
-              displayName: 'Super Admin',
+              email: 'user@certicheck.dev',
+              displayName: 'Test User',
           } as User;
           setUser(mockUser);
           if (mockUser.email === 'super.admin@certicheck.dev') {
