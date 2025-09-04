@@ -42,6 +42,7 @@ import {
   School,
   FileUp,
   Database,
+  History,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { useAuth } from "@/context/AuthContext";
@@ -125,22 +126,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isAdmin && (
                 <>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Institutions">
-                            <Building />
-                            <span>Institutions</span>
-                        </SidebarMenuButton>
+                        <Link href="/institutions" passHref>
+                            <SidebarMenuButton tooltip="Institutions" isActive={pathname === '/institutions'}>
+                                <Building />
+                                <span>Institutions</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Upload Data">
-                            <Upload />
-                            <span>Upload Data</span>
-                        </SidebarMenuButton>
+                         <Link href="/upload-data" passHref>
+                            <SidebarMenuButton tooltip="Upload Data" isActive={pathname === '/upload-data'}>
+                                <Upload />
+                                <span>Upload Data</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Verifications">
-                            <ScanEye />
-                            <span>Verifications</span>
-                        </SidebarMenuButton>
+                        <Link href="/verifications" passHref>
+                            <SidebarMenuButton tooltip="Verifications" isActive={pathname === '/verifications'}>
+                                <ScanEye />
+                                <span>Verifications</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                         <Link href="/blacklist" passHref>
@@ -155,22 +162,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isInstitution && (
                 <>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Upload Data">
-                            <FileUp />
-                            <span>Upload Data</span>
-                        </SidebarMenuButton>
+                        <Link href="/upload-data" passHref>
+                            <SidebarMenuButton tooltip="Upload Data" isActive={pathname === '/upload-data'}>
+                                <FileUp />
+                                <span>Upload Data</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Manage Certificates">
-                            <Database />
-                            <span>Manage Certificates</span>
-                        </SidebarMenuButton>
+                        <Link href="/manage-certificates" passHref>
+                            <SidebarMenuButton tooltip="Manage Certificates" isActive={pathname === '/manage-certificates'}>
+                                <Database />
+                                <span>Manage Certificates</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Verification History">
-                            <ScanEye />
-                            <span>Verification History</span>
-                        </SidebarMenuButton>
+                        <Link href="/verification-history" passHref>
+                            <SidebarMenuButton tooltip="Verification History" isActive={pathname === '/verification-history'}>
+                                <History />
+                                <span>Verification History</span>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                 </>
             )}
