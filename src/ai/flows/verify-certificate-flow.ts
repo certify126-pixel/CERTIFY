@@ -10,12 +10,25 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { createHash } from 'crypto';
+
+const CertificateRecordSchema = z.object({
+  id: z.string(),
+  studentName: z.string(),
+  course: z.string(),
+  institution: z.string(),
+  rollNumber: z.string(),
+  certificateId: z.string(),
+  issueDate: z.string(),
+  status: z.string(),
+});
 
 const VerifyCertificateInputSchema = z.object({
   rollNumber: z.string().describe("The student's roll number or ID."),
   certificateId: z.string().describe("The unique ID of the certificate."),
   issueDate: z.string().describe("The date the certificate was issued (YYYY-MM-DD)."),
   certificateHash: z.string().describe("The SHA-256 hash of the certificate to verify."),
+  allCertificates: z.array(CertificateRecordSchema).describe("The current list of all issued certificates to check against."),
 });
 export type VerifyCertificateInput = z.infer<typeof VerifyCertificateInputSchema>;
 
@@ -35,28 +48,6 @@ export async function verifyCertificate(input: VerifyCertificateInput): Promise<
   return verifyCertificateFlow(input);
 }
 
-// This is a mock database of valid certificate hashes and their details.
-// In a real application, this would be a query to a secure database like Firestore.
-const MOCK_VALID_CERTIFICATES: Record<string, { studentName: string; course: string; institution: string; rollNumber: string; certificateId: string; issueDate: string }> = {
-    "17a7615568875323425e407b48e2439b1a45e53003c9657c9636d36a8581691a": {
-        studentName: "Rohan Kumar",
-        course: "B.Tech in Computer Science",
-        institution: "Jawaharlal Nehru University",
-        rollNumber: "RNC-12345",
-        certificateId: "JHU-84321-2023",
-        issueDate: "2023-05-20"
-    },
-     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": { // Hash for empty strings
-        studentName: "Test User",
-        course: "Test Course",
-        institution: "Test University",
-        rollNumber: "",
-        certificateId: "",
-        issueDate: ""
-    }
-};
-
-
 const verifyCertificateFlow = ai.defineFlow(
   {
     name: 'verifyCertificateFlow',
@@ -64,9 +55,18 @@ const verifyCertificateFlow = ai.defineFlow(
     outputSchema: VerifyCertificateOutputSchema,
   },
   async (input) => {
-    const { certificateHash, rollNumber, certificateId, issueDate } = input;
+    const { certificateHash, rollNumber, certificateId, issueDate, allCertificates } = input;
     
-    const certificateRecord = MOCK_VALID_CERTIFICATES[certificateHash];
+    // In a real app, `allCertificates` would be a database query.
+    // Here, we're using the list passed from the client.
+    const allCertificatesMap = allCertificates.reduce((acc, cert) => {
+        const hash = createHash('sha256');
+        hash.update(cert.rollNumber + cert.certificateId + cert.issueDate);
+        acc[hash.digest('hex')] = cert;
+        return acc;
+    }, {} as Record<string, z.infer<typeof CertificateRecordSchema>>);
+    
+    const certificateRecord = allCertificatesMap[certificateHash];
 
     if (certificateRecord) {
       // The hash matches. Now, let's double-check the other details for an exact match.

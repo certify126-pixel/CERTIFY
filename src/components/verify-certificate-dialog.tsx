@@ -16,7 +16,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle, FileCheck } from "lucide-react";
 import React from "react";
-import { verifyCertificate, VerifyCertificateOutput } from "@/ai/flows/verify-certificate-flow";
+import { verifyCertificate, VerifyCertificateOutput, VerifyCertificateInput } from "@/ai/flows/verify-certificate-flow";
+
+type CertificateRecord = Omit<VerifyCertificateInput, 'certificateHash' | 'allCertificates'> & {id: string; status: string};
 
 export type VerificationHistoryItem = VerifyCertificateOutput & {
     id: string;
@@ -27,10 +29,11 @@ export type VerificationHistoryItem = VerifyCertificateOutput & {
 type VerifyCertificateDialogProps = {
   children: React.ReactNode;
   onVerificationComplete?: (result: VerificationHistoryItem) => void;
+  allCertificates?: CertificateRecord[];
 };
 
 
-export function VerifyCertificateDialog({ children, onVerificationComplete }: VerifyCertificateDialogProps) {
+export function VerifyCertificateDialog({ children, onVerificationComplete, allCertificates = [] }: VerifyCertificateDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const [isVerifying, setIsVerifying] = React.useState(false);
@@ -61,7 +64,8 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
             rollNumber,
             certificateId,
             issueDate,
-            certificateHash
+            certificateHash,
+            allCertificates,
         });
         setVerificationResult(result);
         if (onVerificationComplete) {

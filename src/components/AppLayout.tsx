@@ -44,7 +44,6 @@ import {
   Database,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
-import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
 import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
@@ -233,12 +232,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Users className="mr-2 h-4 w-4" />
                 Switch to {getNextRole()}
             </Button>
-            <VerifyCertificateDialog>
-              <Button>
-                <FileCheck className="mr-2 h-4 w-4" />
-                Verify Certificate
-              </Button>
-            </VerifyCertificateDialog>
           </div>
         </header>
         {children}

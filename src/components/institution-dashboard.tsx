@@ -35,14 +35,16 @@ import {
 import { addCertificate } from "@/ai/flows/add-certificate-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { VerifyCertificateDialog } from "./verify-certificate-dialog";
 
-const issuedCertificates = [
-  { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", issueDate: "2023-05-20", status: "Issued" },
-  { id: "2", certificateId: "JHU-55432-2022", studentName: "Priya Sharma", issueDate: "2022-06-15", status: "Issued" },
-  { id: "3", certificateId: "JHU-19876-2023", studentName: "Amit Singh", issueDate: "2023-05-20", status: "Issued" },
-  { id: "4", certificateId: "JHU-34567-2021", studentName: "Anjali Devi", issueDate: "2021-07-22", status: "Revoked" },
-  { id: "5", certificateId: "JHU-67890-2023", studentName: "Suresh Gupta", issueDate: "2023-05-20", status: "Issued" },
+const initialCertificates = [
+  { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", course: "B.Tech in Computer Science", institution: "Jawaharlal Nehru University", rollNumber: "RNC-12345", issueDate: "2023-05-20", status: "Issued" },
+  { id: "2", certificateId: "JHU-55432-2022", studentName: "Priya Sharma", course: "MBA", institution: "Jawaharlal Nehru University", rollNumber: "RNC-54321", issueDate: "2022-06-15", status: "Issued" },
+  { id: "3", certificateId: "JHU-19876-2023", studentName: "Amit Singh", course: "B.A. in History", institution: "Jawaharlal Nehru University", rollNumber: "RNC-19876", issueDate: "2023-05-20", status: "Issued" },
+  { id: "4", certificateId: "JHU-34567-2021", studentName: "Anjali Devi", course: "M.Sc in Physics", institution: "Jawaharlal Nehru University", rollNumber: "RNC-34567", issueDate: "2021-07-22", status: "Revoked" },
+  { id: "5", certificateId: "JHU-67890-2023", studentName: "Suresh Gupta", course: "B.Com", institution: "Jawaharlal Nehru University", rollNumber: "RNC-67890", issueDate: "2023-05-20", status: "Issued" },
 ];
+
 
 export function InstitutionDashboard() {
   const { toast } = useToast();
@@ -54,6 +56,7 @@ export function InstitutionDashboard() {
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
   const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
+  const [issuedCertificates, setIssuedCertificates] = React.useState(initialCertificates);
 
   const handleCopyHash = () => {
     if (creationResult) {
@@ -88,6 +91,18 @@ export function InstitutionDashboard() {
         });
 
         if (result.success) {
+            const newCertificate = {
+                id: (issuedCertificates.length + 1).toString(),
+                studentName,
+                rollNumber,
+                certificateId,
+                issueDate,
+                course,
+                institution,
+                status: 'Issued'
+            };
+            setIssuedCertificates(prevCerts => [newCertificate, ...prevCerts]);
+
             toast({
                 title: "Certificate Created",
                 description: `Certificate for ${studentName} has been successfully created.`,
@@ -117,6 +132,14 @@ export function InstitutionDashboard() {
 
   return (
     <main className="flex-1 p-6 space-y-6">
+       <div className="flex items-center justify-end gap-4">
+            <VerifyCertificateDialog allCertificates={issuedCertificates}>
+              <Button>
+                <FileCheck className="mr-2 h-4 w-4" />
+                Verify Certificate
+              </Button>
+            </VerifyCertificateDialog>
+        </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -124,7 +147,7 @@ export function InstitutionDashboard() {
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5,480</div>
+            <div className="text-2xl font-bold">{issuedCertificates.length}</div>
             <p className="text-xs text-muted-foreground">+201 since last year</p>
           </CardContent>
         </Card>
@@ -274,5 +297,3 @@ export function InstitutionDashboard() {
     </main>
   );
 }
-
-    
