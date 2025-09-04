@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -98,7 +99,7 @@ export function Dashboard() {
   return (
     <main className="flex-1 p-6 space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Verifications</CardTitle>
             <ScanEye className="h-4 w-4 text-muted-foreground" />
@@ -108,7 +109,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">+5.2% from last month</p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Forgeries Detected</CardTitle>
             <FileX2 className="h-4 w-4 text-muted-foreground" />
@@ -118,7 +119,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">+12.1% from last month</p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Institutions Onboard</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
@@ -128,7 +129,7 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">+2 since last month</p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Verifiers</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
