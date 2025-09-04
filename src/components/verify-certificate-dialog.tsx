@@ -14,12 +14,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, FileUp, FileCheck } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, FileCheck } from "lucide-react";
 import React from "react";
 import { verifyCertificate, VerifyCertificateOutput } from "@/ai/flows/verify-certificate-flow";
-import { createHash } from "crypto";
 
-export function VerifyCertificateDialog({ children }: { children: React.ReactNode }) {
+export type VerificationHistoryItem = VerifyCertificateOutput & {
+    id: string;
+    certificateId: string;
+    timestamp: string;
+};
+
+type VerifyCertificateDialogProps = {
+  children: React.ReactNode;
+  onVerificationComplete?: (result: VerificationHistoryItem) => void;
+};
+
+
+export function VerifyCertificateDialog({ children, onVerificationComplete }: VerifyCertificateDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const [isVerifying, setIsVerifying] = React.useState(false);
@@ -45,27 +56,22 @@ export function VerifyCertificateDialog({ children }: { children: React.ReactNod
     setIsVerifying(true);
     setVerificationResult(null);
 
-    const hash = createHash('sha256');
-    hash.update(rollNumber + certificateId + issueDate);
-    const calculatedHash = hash.digest('hex');
-
-    if (certificateHash !== calculatedHash) {
-        setVerificationResult({
-            verified: false,
-            message: "The provided hash does not match the calculated hash of the certificate details. Please check the inputs."
-        });
-        setIsVerifying(false);
-        return;
-    }
-
-
     try {
         const result = await verifyCertificate({
             rollNumber,
             certificateId,
             issueDate,
+            certificateHash
         });
         setVerificationResult(result);
+        if (onVerificationComplete) {
+            onVerificationComplete({
+                ...result,
+                id: crypto.randomUUID(),
+                certificateId: certificateId,
+                timestamp: new Date().toISOString(),
+            });
+        }
     } catch(error) {
         toast({
             variant: "destructive",
