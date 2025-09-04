@@ -34,6 +34,9 @@ import {
   Mail,
   ScanEye,
   ShieldX,
+  Twitter,
+  Linkedin,
+  Github,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
@@ -167,6 +170,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {children}
+         <footer className="p-6 mt-auto bg-card border-t">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Q Certify. All Rights Reserved.
+            </p>
+            <div className="flex items-center gap-4 mt-4 md:mt-0">
+              <Link href="#" passHref>
+                <Button variant="ghost" size="icon" aria-label="Twitter">
+                  <Twitter className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="#" passHref>
+                <Button variant="ghost" size="icon" aria-label="LinkedIn">
+                  <Linkedin className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="#" passHref>
+                <Button variant="ghost" size="icon" aria-label="GitHub">
+                  <Github className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
