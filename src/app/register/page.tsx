@@ -36,13 +36,19 @@ export default function RegisterPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Store user data in Firestore
             await setDoc(doc(db, "users", user.uid), {
-                email: user.email,
                 uid: user.uid,
-                createdAt: new Date(),
+                email: user.email,
+                role: "user", // Assign a default role
+                createdAt: new Date().toISOString(),
             });
 
-            router.push("/");
+            toast({
+                title: "Registration Successful",
+                description: "You have successfully created an account.",
+            });
+            router.push("/login"); // Redirect to login page after successful registration
         } catch (error: any) {
             toast({
                 variant: "destructive",
