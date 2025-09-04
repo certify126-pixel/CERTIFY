@@ -38,6 +38,7 @@ import {
   Linkedin,
   Github,
   Upload,
+  Users,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
@@ -47,7 +48,7 @@ import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user, role } = useAuth();
+    const { user, role, setRole } = useAuth();
     const { toast } = useToast();
     const pathname = usePathname();
 
@@ -65,6 +66,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             description: "An error occurred while logging out.",
         });
         }
+    };
+    
+    const handleRoleSwitch = () => {
+        const newRole = role === 'Super Admin' ? 'User' : 'Super Admin';
+        setRole(newRole);
+        toast({
+            title: "Switched Role",
+            description: `You are now viewing the dashboard as a ${newRole}.`,
+        });
     };
 
     const isAdmin = role === 'Super Admin';
@@ -174,6 +184,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+             <Button variant="outline" onClick={handleRoleSwitch}>
+                <Users className="mr-2 h-4 w-4" />
+                Switch to {isAdmin ? 'User' : 'Admin'}
+            </Button>
             <VerifyCertificateDialog>
               <Button>
                 <FileCheck className="mr-2 h-4 w-4" />

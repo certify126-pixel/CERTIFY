@@ -18,12 +18,14 @@ type AuthContextType = {
   user: User | null;
   role: UserRole;
   loading: boolean;
+  setRole: React.Dispatch<React.SetStateAction<UserRole>>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   role: "User",
   loading: true,
+  setRole: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -42,11 +44,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               displayName: 'Test User',
           } as User;
           setUser(mockUser);
-          if (mockUser.email === 'super.admin@certicheck.dev') {
-            setRole("Super Admin");
-          } else {
-            setRole("User");
-          }
+          // To make switching work, we don't set the role based on email here anymore
+          // if (mockUser.email === 'super.admin@certicheck.dev') {
+          //   setRole("Super Admin");
+          // } else {
+          //   setRole("User");
+          // }
       } else {
         setUser(user);
         // This is where you would fetch the user's role from Firestore
@@ -62,9 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
+  // Set user based on role for mock purposes
+  useEffect(() => {
+    if (role === 'Super Admin') {
+      setUser({ email: 'super.admin@certicheck.dev' } as User);
+    } else {
+      setUser({ email: 'user@certicheck.dev' } as User);
+    }
+  }, [role]);
+
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, setRole, loading }}>
       {loading ? (
          <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
