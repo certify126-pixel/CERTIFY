@@ -11,7 +11,7 @@ export const CertiCheckLogo = (props: React.SVGProps<SVGSVGElement>) => (
     strokeLinejoin="round"
     {...props}
   >
-    <title>CertiCheck Logo</title>
+    <title>Q Certify Logo</title>
     <path d="M15 7l-5.5 5.5a3 3 0 0 0 4.24 4.24l5.5-5.5" />
     <path d="M12 7h.01" />
     <path d="M12 17h.01" />

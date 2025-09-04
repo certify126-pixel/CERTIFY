@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
           
           <h3 className="font-bold text-xl pt-2">1. Introduction</h3>
           <p>
-            CertiCheck Jharkhand ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+            Q Certify ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
           </p>
 
           <h3 className="font-bold text-xl pt-2">2. Information We Collect</h3>

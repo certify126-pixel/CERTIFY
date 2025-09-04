@@ -70,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 p-2">
             <CertiCheckLogo className="w-8 h-8 text-primary" />
             <h1 className="font-headline text-lg font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-              CertiCheck
+              Q Certify
             </h1>
           </div>
         </SidebarHeader>

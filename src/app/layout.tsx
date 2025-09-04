@@ -5,7 +5,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import AppLayout from '@/components/AppLayout';
 
 export const metadata: Metadata = {
-  title: 'CertiCheck Jharkhand',
+  title: 'Q Certify',
   description: 'An Academic Certificate Verification Platform',
 };
 
