@@ -239,19 +239,21 @@ export function Dashboard() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex items-center justify-between p-6 border-b">
+        <header className="flex items-center justify-between p-4 border-b bg-card">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="font-headline text-3xl font-bold text-foreground">
+            <h1 className="font-headline text-2xl font-bold text-foreground">
               Admin Dashboard
             </h1>
           </div>
-          <VerifyCertificateDialog>
-            <Button>
-              <FileCheck className="mr-2 h-4 w-4" />
-              Verify Certificate
-            </Button>
-          </VerifyCertificateDialog>
+          <div className="flex items-center gap-4">
+            <VerifyCertificateDialog>
+              <Button>
+                <FileCheck className="mr-2 h-4 w-4" />
+                Verify Certificate
+              </Button>
+            </VerifyCertificateDialog>
+          </div>
         </header>
 
         <main className="flex-1 p-6 space-y-6">
