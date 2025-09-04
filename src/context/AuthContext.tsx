@@ -12,7 +12,7 @@ import React,
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-type UserRole = "Super Admin" | "User";
+type UserRole = "Super Admin" | "User" | "Institution";
 
 type AuthContextType = {
   user: User | null;
@@ -44,20 +44,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               displayName: 'Test User',
           } as User;
           setUser(mockUser);
-          // To make switching work, we don't set the role based on email here anymore
-          // if (mockUser.email === 'super.admin@certicheck.dev') {
-          //   setRole("Super Admin");
-          // } else {
-          //   setRole("User");
-          // }
       } else {
         setUser(user);
-        // This is where you would fetch the user's role from Firestore
-        if (user.email === 'super.admin@certicheck.dev') {
-            setRole("Super Admin");
-        } else {
-            setRole("User");
-        }
       }
       setLoading(false);
     });
@@ -69,6 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (role === 'Super Admin') {
       setUser({ email: 'super.admin@certicheck.dev' } as User);
+    } else if (role === 'Institution') {
+      setUser({ email: 'institution@certicheck.dev' } as User);
     } else {
       setUser({ email: 'user@certicheck.dev' } as User);
     }

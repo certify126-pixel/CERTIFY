@@ -2,6 +2,7 @@
 "use client";
 
 import { AdminDashboard } from "@/components/admin-dashboard";
+import { InstitutionDashboard } from "@/components/institution-dashboard";
 import { UserDashboard } from "@/components/user-dashboard";
 import { useAuth } from "@/context/AuthContext";
 
@@ -12,5 +13,9 @@ export default function Home() {
     return <AdminDashboard />;
   }
   
+  if (role === "Institution") {
+    return <InstitutionDashboard />;
+  }
+
   return <UserDashboard />;
 }

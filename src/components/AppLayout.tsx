@@ -39,6 +39,9 @@ import {
   Github,
   Upload,
   Users,
+  School,
+  FileUp,
+  Database,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
@@ -69,7 +72,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
     
     const handleRoleSwitch = () => {
-        const newRole = role === 'Super Admin' ? 'User' : 'Super Admin';
+        let newRole: 'User' | 'Super Admin' | 'Institution';
+        if (role === 'User') {
+          newRole = 'Super Admin';
+        } else if (role === 'Super Admin') {
+          newRole = 'Institution';
+        } else {
+          newRole = 'User';
+        }
         setRole(newRole);
         toast({
             title: "Switched Role",
@@ -78,6 +88,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     const isAdmin = role === 'Super Admin';
+    const isInstitution = role === 'Institution';
+
+    const getNextRole = () => {
+      if (role === 'User') return 'Admin';
+      if (role === 'Super Admin') return 'Institution';
+      return 'User';
+    }
+
+    const getDashboardTitle = () => {
+      if (isAdmin) return 'Admin Dashboard';
+      if (isInstitution) return 'Institution Dashboard';
+      return 'User Dashboard';
+    }
 
   return (
     <SidebarProvider>
@@ -128,6 +151,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </SidebarMenuItem>
                 </>
             )}
+            {isInstitution && (
+                <>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Upload Data">
+                            <FileUp />
+                            <span>Upload Data</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Manage Certificates">
+                            <Database />
+                            <span>Manage Certificates</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Verification History">
+                            <ScanEye />
+                            <span>Verification History</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </>
+            )}
             <SidebarMenuItem>
                 <Link href="/about" passHref>
                   <SidebarMenuButton tooltip="About Us" isActive={pathname === '/about'}>
@@ -166,7 +211,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
              <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
               <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role} />
-              <AvatarFallback>{role === 'Super Admin' ? 'SA' : 'U'}</AvatarFallback>
+              <AvatarFallback>{role === 'Super Admin' ? 'SA' : role === 'Institution' ? 'IN' : 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="font-semibold text-sidebar-foreground truncate">{user?.email}</span>
@@ -180,13 +225,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
             <h1 className="font-headline text-2xl font-bold text-foreground">
-              {isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
+              {getDashboardTitle()}
             </h1>
           </div>
           <div className="flex items-center gap-4">
              <Button variant="outline" onClick={handleRoleSwitch}>
                 <Users className="mr-2 h-4 w-4" />
-                Switch to {isAdmin ? 'User' : 'Admin'}
+                Switch to {getNextRole()}
             </Button>
             <VerifyCertificateDialog>
               <Button>
