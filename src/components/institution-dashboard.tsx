@@ -30,9 +30,11 @@ import {
   FileCheck,
   User,
   Loader2,
+  Copy,
 } from "lucide-react";
 import { addCertificate } from "@/ai/flows/add-certificate-flow";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 const issuedCertificates = [
   { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", issueDate: "2023-05-20", status: "Issued" },
@@ -51,9 +53,21 @@ export function InstitutionDashboard() {
   const [issueDate, setIssueDate] = React.useState("");
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
+  const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
+
+  const handleCopyHash = () => {
+    if (creationResult) {
+      navigator.clipboard.writeText(creationResult.hash);
+      toast({
+        title: "Copied to Clipboard",
+        description: "The certificate hash has been copied.",
+      });
+    }
+  };
 
   const handleCreateCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreationResult(null);
     if (!studentName || !rollNumber || !certificateId || !issueDate || !course) {
         toast({
             variant: "destructive",
@@ -76,8 +90,9 @@ export function InstitutionDashboard() {
         if (result.success) {
             toast({
                 title: "Certificate Created",
-                description: `Certificate for ${studentName} has been successfully created. Hash: ${result.certificateHash.substring(0,10)}...`,
+                description: `Certificate for ${studentName} has been successfully created.`,
             });
+            setCreationResult({ hash: result.certificateHash, name: studentName });
             // Clear form
             setStudentName("");
             setRollNumber("");
@@ -233,6 +248,25 @@ export function InstitutionDashboard() {
                     {isCreating ? "Creating..." : "Create Certificate"}
                   </Button>
                 </form>
+                {creationResult && (
+                  <Alert className="mt-4 bg-primary/5 border-primary/20">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertTitle className="text-primary font-headline">Certificate Created for {creationResult.name}</AlertTitle>
+                    <AlertDescription className="mt-2 text-primary/80">
+                      <p className="font-semibold">Generated Hash:</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input 
+                          readOnly 
+                          value={creationResult.hash} 
+                          className="text-xs h-8 flex-1 truncate"
+                        />
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyHash}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
             </CardContent>
           </Card>
         </div>
