@@ -231,9 +231,9 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
                 {verificationResult.verified ? "Verification Successful" : "Verification Failed"}
               </AlertTitle>
               <AlertDescription className={verificationResult.verified ? 'text-green-400/80' : 'text-red-400/80'}>
-                {verificationResult.message}
+                <p>{verificationResult.message}</p>
                 {verificationResult.certificateDetails && (
-                    <div className="mt-2 text-xs space-y-1">
+                    <div className="mt-2 text-xs space-y-1 border-t border-current pt-2">
                         <p><strong>Student:</strong> {verificationResult.certificateDetails.studentName}</p>
                         <p><strong>Course:</strong> {verificationResult.certificateDetails.course}</p>
                         <p><strong>Institution:</strong> {verificationResult.certificateDetails.institution}</p>
