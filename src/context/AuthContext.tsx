@@ -49,8 +49,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, loading, pathname, router]);
 
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
-  if (loading) {
+  if (loading && !isAuthPage) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -58,7 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  const isAuthPage = pathname === "/login" || pathname === "/register";
   if (user || isAuthPage) {
       return (
         <AuthContext.Provider value={{ user, loading }}>
