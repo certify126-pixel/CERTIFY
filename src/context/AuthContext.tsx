@@ -23,14 +23,14 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  role: "User",
+  role: "Institution",
   loading: true,
   setRole: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<UserRole>("User");
+  const [role, setRole] = useState<UserRole>("Institution");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
