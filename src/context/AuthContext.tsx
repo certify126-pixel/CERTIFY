@@ -1,3 +1,4 @@
+
 "use client";
 
 import React,
@@ -11,24 +12,29 @@ import React,
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
+type UserRole = "Super Admin" | "User";
+
 type AuthContextType = {
   user: User | null;
+  role: UserRole;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  role: "User",
   loading: true,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<UserRole>("User");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       // For now, let's simulate a logged-in user to bypass authentication checks
-      // In a real scenario, you'd want to handle this based on your app's needs.
+      // In a real scenario, you'd fetch the user's role from your database.
       if (!user) {
           const mockUser = {
               uid: 'mock-user-uid',
@@ -36,8 +42,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               displayName: 'Super Admin',
           } as User;
           setUser(mockUser);
+          if (mockUser.email === 'super.admin@certicheck.dev') {
+            setRole("Super Admin");
+          } else {
+            setRole("User");
+          }
       } else {
         setUser(user);
+        // This is where you would fetch the user's role from Firestore
+        if (user.email === 'super.admin@certicheck.dev') {
+            setRole("Super Admin");
+        } else {
+            setRole("User");
+        }
       }
       setLoading(false);
     });
@@ -47,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, role, loading }}>
       {loading ? (
          <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />

@@ -37,6 +37,7 @@ import {
   Twitter,
   Linkedin,
   Github,
+  Upload,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { VerifyCertificateDialog } from "@/components/verify-certificate-dialog";
@@ -46,7 +47,7 @@ import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const { toast } = useToast();
     const pathname = usePathname();
 
@@ -65,6 +66,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         });
         }
     };
+
+    const isAdmin = role === 'Super Admin';
 
   return (
     <SidebarProvider>
@@ -87,24 +90,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </SidebarMenuButton>
                 </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Institutions">
-                <Building />
-                <span>Institutions</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Verifications">
-                <ScanEye />
-                <span>Verifications</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Blacklist">
-                <ShieldX />
-                <span>Blacklist</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {isAdmin && (
+                <>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Institutions">
+                            <Building />
+                            <span>Institutions</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Upload Data">
+                            <Upload />
+                            <span>Upload Data</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Verifications">
+                            <ScanEye />
+                            <span>Verifications</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Blacklist">
+                            <ShieldX />
+                            <span>Blacklist</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </>
+            )}
             <SidebarMenuItem>
                 <Link href="/about" passHref>
                   <SidebarMenuButton tooltip="About Us" isActive={pathname === '/about'}>
@@ -142,12 +155,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
              <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
-              <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt="Admin" />
-              <AvatarFallback>SA</AvatarFallback>
+              <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role} />
+              <AvatarFallback>{role === 'Super Admin' ? 'SA' : 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="font-semibold text-sidebar-foreground truncate">{user?.email}</span>
-              <span className="text-xs text-sidebar-foreground/70">Super Admin</span>
+              <span className="text-xs text-sidebar-foreground/70">{role}</span>
             </div>
           </div>
         </SidebarFooter>
@@ -157,7 +170,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
             <h1 className="font-headline text-2xl font-bold text-foreground">
-              Admin Dashboard
+              {isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
             </h1>
           </div>
           <div className="flex items-center gap-4">
