@@ -8,6 +8,7 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI
 const options = {
+  tls: true,
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
