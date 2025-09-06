@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function Home() {
-  const { user, role, loading } = useAuth();
+  const { user, loading, viewAsRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -27,11 +27,11 @@ export default function Home() {
     );
   }
   
-  if (role === "Super Admin") {
+  if (viewAsRole === "Super Admin") {
     return <AdminDashboard />;
   }
   
-  if (role === "Institution") {
+  if (viewAsRole === "Institution") {
     return <InstitutionDashboard />;
   }
 

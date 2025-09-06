@@ -44,14 +44,25 @@ import {
   Database,
   History,
   LogIn,
+  Eye,
 } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CertiCheckLogo } from "@/components/icons";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user, role, setRole, logout } = useAuth();
+    const { user, role, logout, viewAsRole, setViewAsRole } = useAuth();
     const { toast } = useToast();
     const pathname = usePathname();
     const router = useRouter();
@@ -70,12 +81,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return <>{children}</>;
     }
 
-    const isAdmin = role === 'Super Admin';
-    const isInstitution = role === 'Institution';
+    const isAdmin = viewAsRole === 'Super Admin';
+    const isInstitution = viewAsRole === 'Institution';
 
     const getDashboardTitle = () => {
-      if (isAdmin) return 'Admin Dashboard';
-      if (isInstitution) return 'Institution Dashboard';
+      if (viewAsRole === 'Super Admin') return 'Admin Dashboard';
+      if (viewAsRole === 'Institution') return 'Institution Dashboard';
       return 'User Dashboard';
     }
 
@@ -213,7 +224,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {user && (
             <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
                <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
-                <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role} />
+                <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role || ''} />
                 <AvatarFallback>{role === 'Super Admin' ? 'SA' : role === 'Institution' ? 'IN' : 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -233,6 +244,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            {role === 'Super Admin' && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">
+                            <Eye className="mr-2"/>
+                            View as: {viewAsRole}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuLabel>Switch Dashboard View</DropdownMenuLabel>
+                        <DropdownMenuSeparator/>
+                         <DropdownMenuRadioGroup value={viewAsRole || ''} onValueChange={(val) => setViewAsRole(val as UserRole)}>
+                            <DropdownMenuRadioItem value="Super Admin">Super Admin</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="Institution">Institution</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="User">User</DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
           </div>
         </header>
         {children}
