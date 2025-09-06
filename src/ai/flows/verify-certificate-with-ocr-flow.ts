@@ -5,19 +5,19 @@
  *
  * - verifyCertificateWithOcr - A function that handles the OCR and verification process.
  * - VerifyCertificateWithOcrInput - The input type for the verifyCertificateWithOcr function.
- * - VerifyCertificateWithOcrOutput - The return type for the verifyCertificateWithOcr function.
+ * - VerifyCertificateOutput - The return type for the verifyCertificateWithOcr function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { verifyCertificate, VerifyCertificateInput, VerifyCertificateOutput } from './verify-certificate-flow';
+import { verifyCertificate, VerifyCertificateInput, type VerifyCertificateOutput } from './verify-certificate-flow';
 
 
 const VerifyCertificateWithOcrInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A photo of a certificate, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of a certificate, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
 });
 export type VerifyCertificateWithOcrInput = z.infer<typeof VerifyCertificateWithOcrInputSchema>;
@@ -55,7 +55,7 @@ const verifyCertificateWithOcrFlow = ai.defineFlow(
   {
     name: 'verifyCertificateWithOcrFlow',
     inputSchema: VerifyCertificateWithOcrInputSchema,
-    outputSchema: VerifyCertificateOutput.Schema,
+    outputSchema: z.custom<VerifyCertificateOutput>(),
   },
   async (input) => {
     const { photoDataUri } = input;
