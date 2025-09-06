@@ -43,7 +43,7 @@ const addCertificateFlow = ai.defineFlow(
     outputSchema: AddCertificateOutputSchema,
   },
   async (input) => {
-    const { rollNumber, certificateId, issueDate } = input;
+    const { studentName, rollNumber, certificateId, issueDate, course, institution } = input;
 
     // Create a unique cryptographic hash for the certificate data.
     const hash = createHash('sha256');
@@ -55,7 +55,12 @@ const addCertificateFlow = ai.defineFlow(
     const certificatesCollection = db.collection('certificates');
 
     const newCertificate = {
-        ...input,
+        studentName,
+        rollNumber,
+        certificateId,
+        issueDate,
+        course,
+        institution,
         certificateHash,
         status: 'Issued',
         createdAt: new Date(),
@@ -72,3 +77,4 @@ const addCertificateFlow = ai.defineFlow(
     };
   }
 );
+

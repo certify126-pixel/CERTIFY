@@ -1,0 +1,84 @@
+
+'use server';
+
+/**
+ * @fileOverview A flow for logging in a user.
+ *
+ * - loginUser - A function that handles user login.
+ * - LoginUserInput - The input type for the loginUser function.
+ * - LoginUserOutput - The return type for the loginUser function.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { createHash } from 'crypto';
+import clientPromise from '@/lib/mongodb';
+
+const LoginUserInputSchema = z.object({
+  email: z.string().email().describe("The user's email address."),
+  password: z.string().describe("The user's password."),
+});
+export type LoginUserInput = z.infer<typeof LoginUserInputSchema>;
+
+const LoginUserOutputSchema = z.object({
+  success: z.boolean().describe("Whether the login was successful."),
+  message: z.string().describe("A message indicating the result of the operation."),
+  user: z.object({
+      id: z.string(),
+      email: z.string(),
+      role: z.string(),
+  }).optional(),
+});
+export type LoginUserOutput = z.infer<typeof LoginUserOutputSchema>;
+
+function hashPassword(password: string): string {
+    const sha256 = createHash('sha256');
+    sha256.update(password);
+    return sha256.digest('hex');
+}
+
+
+export async function loginUser(input: LoginUserInput): Promise<LoginUserOutput> {
+  return loginUserFlow(input);
+}
+
+const loginUserFlow = ai.defineFlow(
+  {
+    name: 'loginUserFlow',
+    inputSchema: LoginUserInputSchema,
+    outputSchema: LoginUserOutputSchema,
+  },
+  async ({ email, password }) => {
+    const client = await clientPromise;
+    const db = client.db();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      return {
+        success: false,
+        message: 'Invalid email or password.',
+      };
+    }
+    
+    const hashedPassword = hashPassword(password);
+    
+    if (user.password !== hashedPassword) {
+        return {
+            success: false,
+            message: 'Invalid email or password.',
+        };
+    }
+
+    return {
+      success: true,
+      message: 'Login successful.',
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      }
+    };
+  }
+);

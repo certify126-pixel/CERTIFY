@@ -43,58 +43,35 @@ import {
   FileUp,
   Database,
   History,
+  LogIn,
 } from "lucide-react";
 import { CertiCheckLogo } from "@/components/icons";
 import { useAuth } from "@/context/AuthContext";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user, role, setRole } = useAuth();
+    const { user, role, setRole, logout } = useAuth();
     const { toast } = useToast();
     const pathname = usePathname();
+    const router = useRouter();
 
     const handleLogout = async () => {
-        try {
-        await signOut(auth);
+        await logout();
         toast({
             title: "Logged Out",
             description: "You have been successfully logged out.",
         });
-        } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Logout Failed",
-            description: "An error occurred while logging out.",
-        });
-        }
+        router.push('/login');
     };
     
-    const handleRoleSwitch = () => {
-        let newRole: 'User' | 'Super Admin' | 'Institution';
-        if (role === 'User') {
-          newRole = 'Super Admin';
-        } else if (role === 'Super Admin') {
-          newRole = 'Institution';
-        } else {
-          newRole = 'User';
-        }
-        setRole(newRole);
-        toast({
-            title: "Switched Role",
-            description: `You are now viewing the dashboard as a ${newRole}.`,
-        });
-    };
+    // Hide sidebar for login/register pages
+    if (pathname === '/login' || pathname === '/register') {
+      return <>{children}</>;
+    }
 
     const isAdmin = role === 'Super Admin';
     const isInstitution = role === 'Institution';
-
-    const getNextRole = () => {
-      if (role === 'User') return 'Admin';
-      if (role === 'Super Admin') return 'Institution';
-      return 'User';
-    }
 
     const getDashboardTitle = () => {
       if (isAdmin) return 'Admin Dashboard';
@@ -215,23 +192,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
         <SidebarFooter>
             <SidebarMenu>
+              {user ? (
                 <SidebarMenuItem>
                     <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
                         <LogOut />
                         <span>Logout</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+              ) : (
+                 <SidebarMenuItem>
+                    <Link href="/login" passHref>
+                      <SidebarMenuButton tooltip="Login">
+                          <LogIn />
+                          <span>Login</span>
+                      </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
-          <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
-             <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
-              <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role} />
-              <AvatarFallback>{role === 'Super Admin' ? 'SA' : role === 'Institution' ? 'IN' : 'U'}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-semibold text-sidebar-foreground truncate">{user?.email}</span>
-              <span className="text-xs text-sidebar-foreground/70">{role}</span>
+          {user && (
+            <div className="flex items-center gap-3 p-3 border-t border-sidebar-border/50">
+               <Avatar className="h-10 w-10 border-2 border-primary-foreground/50">
+                <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person" alt={role} />
+                <AvatarFallback>{role === 'Super Admin' ? 'SA' : role === 'Institution' ? 'IN' : 'U'}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+                <span className="font-semibold text-sidebar-foreground truncate">{user.email}</span>
+                <span className="text-xs text-sidebar-foreground/70">{role}</span>
+              </div>
             </div>
-          </div>
+          )}
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -243,10 +233,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-             <Button variant="outline" onClick={handleRoleSwitch}>
-                <Users className="mr-2 h-4 w-4" />
-                Switch to {getNextRole()}
-            </Button>
           </div>
         </header>
         {children}

@@ -1,73 +1,97 @@
 
 "use client";
 
-import React,
-{
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
+import clientPromise from "@/lib/mongodb";
+import { loginUser, LoginUserInput } from "@/ai/flows/login-user-flow";
+import { registerUser, RegisterUserInput } from "@/ai/flows/register-user-flow";
 
 type UserRole = "Super Admin" | "User" | "Institution";
 
+type User = {
+  id: string;
+  email: string;
+  role: UserRole;
+};
+
 type AuthContextType = {
   user: User | null;
-  role: UserRole;
+  role: UserRole | null;
   loading: boolean;
-  setRole: React.Dispatch<React.SetStateAction<UserRole>>;
+  login: (credentials: LoginUserInput) => Promise<{ success: boolean; message: string }>;
+  register: (details: RegisterUserInput) => Promise<{ success: boolean; message: string }>;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  role: "Institution",
+  role: null,
   loading: true,
-  setRole: () => {},
+  login: async () => ({ success: false, message: "Not implemented" }),
+  register: async () => ({ success: false, message: "Not implemented" }),
+  logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<UserRole>("Institution");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // For now, let's simulate a logged-in user to bypass authentication checks
-      // In a real scenario, you'd fetch the user's role from your database.
-      if (!user) {
-          const mockUser = {
-              uid: 'mock-user-uid',
-              email: 'user@certicheck.dev',
-              displayName: 'Test User',
-          } as User;
-          setUser(mockUser);
-      } else {
-        setUser(user);
+    const storedUser = localStorage.getItem("q_certify_user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem("q_certify_user");
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  // Set user based on role for mock purposes
-  useEffect(() => {
-    if (role === 'Super Admin') {
-      setUser({ email: 'super.admin@certicheck.dev' } as User);
-    } else if (role === 'Institution') {
-      setUser({ email: 'institution@certicheck.dev' } as User);
-    } else {
-      setUser({ email: 'user@certicheck.dev' } as User);
+  const login = async (credentials: LoginUserInput) => {
+    setLoading(true);
+    try {
+      const result = await loginUser(credentials);
+      if (result.success && result.user) {
+        const userData = {
+            id: result.user.id,
+            email: result.user.email,
+            role: result.user.role as UserRole,
+        };
+        setUser(userData);
+        localStorage.setItem("q_certify_user", JSON.stringify(userData));
+        return { success: true, message: result.message };
+      } else {
+        return { success: false, message: result.message };
+      }
+    } catch (error: any) {
+        return { success: false, message: error.message || "An unexpected error occurred." };
+    } finally {
+      setLoading(false);
     }
-  }, [role]);
+  };
 
+  const register = async (details: RegisterUserInput) => {
+    setLoading(true);
+    try {
+        const result = await registerUser(details);
+        return result;
+    } catch (error: any) {
+        return { success: false, message: error.message || "An unexpected error occurred." };
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("q_certify_user");
+  };
 
   return (
-    <AuthContext.Provider value={{ user, role, setRole, loading }}>
-      {loading ? (
+    <AuthContext.Provider value={{ user, role: user?.role || null, loading, login, register, logout }}>
+      {loading && !user ? (
          <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -77,20 +101,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
