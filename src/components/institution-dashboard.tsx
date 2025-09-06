@@ -37,13 +37,24 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { VerifyCertificateDialog } from "./verify-certificate-dialog";
 
-const initialCertificates = [
-  { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", course: "B.Tech in Computer Science", institution: "Jawaharlal Nehru University", rollNumber: "RNC-12345", issueDate: "2023-05-20", status: "Issued" },
-  { id: "2", certificateId: "JHU-55432-2022", studentName: "Priya Sharma", course: "MBA", institution: "Jawaharlal Nehru University", rollNumber: "RNC-54321", issueDate: "2022-06-15", status: "Issued" },
-  { id: "3", certificateId: "JHU-19876-2023", studentName: "Amit Singh", course: "B.A. in History", institution: "Jawaharlal Nehru University", rollNumber: "RNC-19876", issueDate: "2023-05-20", status: "Issued" },
-  { id: "4", certificateId: "JHU-34567-2021", studentName: "Anjali Devi", course: "M.Sc in Physics", institution: "Jawaharlal Nehru University", rollNumber: "RNC-34567", issueDate: "2021-07-22", status: "Revoked" },
-  { id: "5", certificateId: "JHU-67890-2023", studentName: "Suresh Gupta", course: "B.Com", institution: "Jawaharlal Nehru University", rollNumber: "RNC-67890", issueDate: "2023-05-20", status: "Issued" },
-];
+type Certificate = {
+  _id: string;
+  certificateId: string;
+  studentName: string;
+  course: string;
+  institution: string;
+  rollNumber: string;
+  issueDate: string;
+  status: string;
+  certificateHash: string;
+};
+
+// This function would typically be in a service/API file.
+async function getIssuedCertificates(institution: string): Promise<Certificate[]> {
+    // This is a placeholder. In a real app, you'd fetch this from your API.
+    // We can't call MongoDB directly from the client.
+    return [];
+}
 
 
 export function InstitutionDashboard() {
@@ -56,7 +67,33 @@ export function InstitutionDashboard() {
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
   const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
-  const [issuedCertificates, setIssuedCertificates] = React.useState(initialCertificates);
+  const [issuedCertificates, setIssuedCertificates] = React.useState<Certificate[]>([]);
+  const [isLoadingCerts, setIsLoadingCerts] = React.useState(true);
+
+
+  const fetchCertificates = React.useCallback(async () => {
+    setIsLoadingCerts(true);
+    try {
+        // Since we can't directly call the DB from the client,
+        // we'll rely on the manual creation to update the list for this demo.
+        // In a real app, an API endpoint would be called here.
+        // const certs = await getIssuedCertificates(institution);
+        // setIssuedCertificates(certs);
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Failed to load certificates",
+            description: "Could not fetch the list of issued certificates.",
+        });
+    } finally {
+        setIsLoadingCerts(false);
+    }
+  }, [institution, toast]);
+
+  React.useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
+
 
   const handleCopyHash = () => {
     if (creationResult) {
@@ -91,21 +128,22 @@ export function InstitutionDashboard() {
         });
 
         if (result.success) {
-            const newCertificate = {
-                id: (issuedCertificates.length + 1).toString(),
+             const newCertificate: Certificate = {
+                _id: new Date().toISOString(), // Temporary ID
                 studentName,
                 rollNumber,
                 certificateId,
                 issueDate,
                 course,
                 institution,
-                status: 'Issued'
+                status: 'Issued',
+                certificateHash: result.certificateHash,
             };
             setIssuedCertificates(prevCerts => [newCertificate, ...prevCerts]);
 
             toast({
                 title: "Certificate Created",
-                description: `Certificate for ${studentName} has been successfully created.`,
+                description: `Certificate for ${studentName} has been successfully created and stored.`,
             });
             setCreationResult({ hash: result.certificateHash, name: studentName });
             // Clear form
@@ -133,7 +171,7 @@ export function InstitutionDashboard() {
   return (
     <main className="flex-1 p-6 space-y-6">
        <div className="flex items-center justify-end gap-4">
-            <VerifyCertificateDialog allCertificates={issuedCertificates}>
+            <VerifyCertificateDialog>
               <Button>
                 <FileCheck className="mr-2 h-4 w-4" />
                 Verify Certificate
@@ -201,21 +239,27 @@ export function InstitutionDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {issuedCertificates.map((cert) => (
-                  <TableRow key={cert.id}>
-                    <TableCell className="font-medium">{cert.certificateId}</TableCell>
-                    <TableCell>{cert.studentName}</TableCell>
-                    <TableCell>{cert.issueDate}</TableCell>
-                    <TableCell>
-                      <Badge variant={cert.status === 'Issued' ? 'default' : 'destructive'} className={cert.status === 'Issued' ? 'bg-green-500/20 text-green-500' : ''}>
-                        {cert.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">View Details</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {isLoadingCerts ? (
+                    <TableRow><TableCell colSpan={5} className="text-center">Loading certificates...</TableCell></TableRow>
+                ) : issuedCertificates.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center">No certificates issued yet.</TableCell></TableRow>
+                ) : (
+                    issuedCertificates.map((cert) => (
+                    <TableRow key={cert._id}>
+                        <TableCell className="font-medium">{cert.certificateId}</TableCell>
+                        <TableCell>{cert.studentName}</TableCell>
+                        <TableCell>{cert.issueDate}</TableCell>
+                        <TableCell>
+                        <Badge variant={cert.status === 'Issued' ? 'default' : 'destructive'} className={cert.status === 'Issued' ? 'bg-green-500/20 text-green-500' : ''}>
+                            {cert.status}
+                        </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="sm">View Details</Button>
+                        </TableCell>
+                    </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

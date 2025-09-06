@@ -1,3 +1,4 @@
+
 // add-certificate-flow.ts
 'use server';
 
@@ -12,6 +13,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
+import clientPromise from '@/lib/mongodb';
 
 const AddCertificateInputSchema = z.object({
   studentName: z.string().describe("The full name of the student."),
@@ -48,15 +50,25 @@ const addCertificateFlow = ai.defineFlow(
     hash.update(rollNumber + certificateId + issueDate);
     const certificateHash = hash.digest('hex');
 
-    // In a real-world scenario, you would now store the full certificate record
-    // along with the 'certificateHash' in your database (e.g., Firestore).
+    const client = await clientPromise;
+    const db = client.db();
+    const certificatesCollection = db.collection('certificates');
 
-    console.log(`Received certificate for ${input.studentName}. Hash: ${certificateHash}`);
+    const newCertificate = {
+        ...input,
+        certificateHash,
+        status: 'Issued',
+        createdAt: new Date(),
+    };
+
+    await certificatesCollection.insertOne(newCertificate);
+
+    console.log(`Stored certificate for ${input.studentName}. Hash: ${certificateHash}`);
 
     return {
       success: true,
       certificateHash,
-      message: 'Certificate data received and processed successfully.',
+      message: 'Certificate data has been successfully stored in the database.',
     };
   }
 );

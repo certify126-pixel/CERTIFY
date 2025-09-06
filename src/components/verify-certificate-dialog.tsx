@@ -17,13 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle, FileCheck, Upload } from "lucide-react";
 import React from "react";
-import { verifyCertificate, VerifyCertificateOutput, VerifyCertificateInput } from "@/ai/flows/verify-certificate-flow";
+import { verifyCertificate, VerifyCertificateOutput } from "@/ai/flows/verify-certificate-flow";
 import { verifyCertificateWithOcr } from "@/ai/flows/verify-certificate-with-ocr-flow";
-import { createHash } from 'crypto';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-
-
-type CertificateRecord = Omit<VerifyCertificateInput, 'certificateHash' | 'allCertificates'> & {id: string; status: string; studentName: string; course: string; institution: string;};
 
 
 export type VerificationHistoryItem = VerifyCertificateOutput & {
@@ -35,11 +31,10 @@ export type VerificationHistoryItem = VerifyCertificateOutput & {
 type VerifyCertificateDialogProps = {
   children: React.ReactNode;
   onVerificationComplete?: (result: VerificationHistoryItem, details: Record<string, string>) => void;
-  allCertificates?: CertificateRecord[];
 };
 
 
-export function VerifyCertificateDialog({ children, onVerificationComplete, allCertificates = [] }: VerifyCertificateDialogProps) {
+export function VerifyCertificateDialog({ children, onVerificationComplete }: VerifyCertificateDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const [isVerifying, setIsVerifying] = React.useState(false);
@@ -94,17 +89,8 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
 
     const submittedDetails = { rollNumber, certificateId, issueDate };
 
-    // Calculate hash from inputs
-    const hash = createHash('sha256');
-    hash.update(rollNumber + certificateId + issueDate);
-    const certificateHash = hash.digest('hex');
-
     try {
-        const result = await verifyCertificate({
-            ...submittedDetails,
-            certificateHash,
-            allCertificates,
-        });
+        const result = await verifyCertificate(submittedDetails);
         handleVerificationResult(result, submittedDetails);
     } catch(error) {
         toast({
@@ -133,7 +119,6 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
     try {
         const result = await verifyCertificateWithOcr({
             photoDataUri: filePreview,
-            allCertificates,
         });
         
         let submittedDetails = {
@@ -141,14 +126,7 @@ export function VerifyCertificateDialog({ children, onVerificationComplete, allC
             rollNumber: "N/A",
             issueDate: "N/A",
         };
-        // This is a bit of a hack, since the OCR flow doesn't return the extracted text directly
-        // In a real app, the flow would be adjusted to return this.
-        if (result.message.includes('details do not match')) {
-             // We can assume some details were extracted but didn't match.
-        } else if (result.certificateDetails) {
-            // This is not available on failure, so we can't get it for blacklisting.
-        }
-
+        
         handleVerificationResult(result, submittedDetails);
 
     } catch(error: any) {

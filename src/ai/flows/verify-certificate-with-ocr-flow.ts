@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for verifying an academic certificate by extracting details from an image using OCR.
@@ -9,19 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { createHash } from 'crypto';
-import { verifyCertificate, VerifyCertificateInput } from './verify-certificate-flow';
+import { verifyCertificate, VerifyCertificateInput, VerifyCertificateOutput } from './verify-certificate-flow';
 
-const CertificateRecordSchema = z.object({
-    id: z.string(),
-    studentName: z.string(),
-    course: z.string(),
-    institution: z.string(),
-    rollNumber: z.string(),
-    certificateId: z.string(),
-    issueDate: z.string(),
-    status: z.string(),
-});
 
 const VerifyCertificateWithOcrInputSchema = z.object({
   photoDataUri: z
@@ -29,7 +19,6 @@ const VerifyCertificateWithOcrInputSchema = z.object({
     .describe(
       "A photo of a certificate, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  allCertificates: z.array(CertificateRecordSchema).describe("The current list of all issued certificates to check against."),
 });
 export type VerifyCertificateWithOcrInput = z.infer<typeof VerifyCertificateWithOcrInputSchema>;
 
@@ -39,9 +28,8 @@ const ExtractedCertificateDetailsSchema = z.object({
     issueDate: z.string().describe("The date the certificate was issued (YYYY-MM-DD) extracted from the document."),
 });
 
-export type VerifyCertificateWithOcrOutput = z.infer<typeof CertificateRecordSchema>;
 
-export async function verifyCertificateWithOcr(input: VerifyCertificateWithOcrInput) {
+export async function verifyCertificateWithOcr(input: VerifyCertificateWithOcrInput): Promise<VerifyCertificateOutput> {
   return verifyCertificateWithOcrFlow(input);
 }
 
@@ -67,10 +55,10 @@ const verifyCertificateWithOcrFlow = ai.defineFlow(
   {
     name: 'verifyCertificateWithOcrFlow',
     inputSchema: VerifyCertificateWithOcrInputSchema,
-    outputSchema: z.any(),
+    outputSchema: VerifyCertificateOutput.Schema,
   },
   async (input) => {
-    const { photoDataUri, allCertificates } = input;
+    const { photoDataUri } = input;
 
     // Step 1: Extract details from the image using the OCR prompt
     const { output: extractedDetails } = await ocrPrompt({ photoDataUri });
@@ -81,18 +69,11 @@ const verifyCertificateWithOcrFlow = ai.defineFlow(
     
     const { rollNumber, certificateId, issueDate } = extractedDetails;
 
-    // Step 2: Calculate the hash from the extracted details
-    const hash = createHash('sha256');
-    hash.update(rollNumber + certificateId + issueDate);
-    const certificateHash = hash.digest('hex');
-
-    // Step 3: Call the original verification flow with the extracted details
+    // Step 2: Call the original verification flow with the extracted details
     const verificationInput: VerifyCertificateInput = {
         rollNumber,
         certificateId,
         issueDate,
-        certificateHash,
-        allCertificates,
     };
     
     return await verifyCertificate(verificationInput);
