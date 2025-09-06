@@ -49,6 +49,19 @@ const loginUserFlow = ai.defineFlow(
     outputSchema: LoginUserOutputSchema,
   },
   async ({ email, password }) => {
+    // Super Admin special login
+    if (email === 'admin@qcertify.com' && password === '123456789') {
+        return {
+            success: true,
+            message: 'Super Admin login successful.',
+            user: {
+                id: 'super-admin',
+                email: 'admin@qcertify.com',
+                role: 'Super Admin',
+            }
+        };
+    }
+      
     const client = await clientPromise;
     const db = client.db();
     const usersCollection = db.collection('users');

@@ -29,6 +29,11 @@ export function LoginForm() {
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
+  const handleAdminLogin = () => {
+    setEmail("admin@qcertify.com");
+    setPassword("123456789");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -38,7 +43,7 @@ export function LoginForm() {
     if (result.success) {
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${result.user?.role}!`,
       });
       router.push("/");
     } else {
@@ -88,11 +93,19 @@ export function LoginForm() {
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
-           <div className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Sign up
-            </Link>
+           <div className="text-sm text-muted-foreground text-center space-y-2">
+            <p>
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="font-semibold text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+            <p>
+                or{" "}
+                <Button variant="link" size="sm" className="p-0 h-auto" onClick={handleAdminLogin}>
+                    login as Admin
+                </Button>
+            </p>
           </div>
         </CardFooter>
       </form>
