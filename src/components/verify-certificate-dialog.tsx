@@ -121,10 +121,12 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
             photoDataUri: filePreview,
         });
         
+        // We don't have the exact extracted details here, so we pass a placeholder.
+        // A more robust solution might involve the OCR flow returning the extracted details.
         let submittedDetails = {
-            certificateId: "N/A",
-            rollNumber: "N/A",
-            issueDate: "N/A",
+            certificateId: "From Document",
+            rollNumber: "From Document",
+            issueDate: "From Document",
         };
         
         handleVerificationResult(result, submittedDetails);
