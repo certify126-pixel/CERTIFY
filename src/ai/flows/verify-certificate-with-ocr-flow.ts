@@ -43,7 +43,7 @@ const ocrPrompt = ai.definePrompt({
     Analyze the following certificate image and extract the following fields:
     - Roll Number (look for labels like "Roll No.", "Student ID", "Roll Number")
     - Certificate ID (look for a unique identifier, often labeled "Certificate No.", "Serial No.", or "ID")
-    - Issue Date (find the date of issuance and format it as YYYY-MM-DD)
+    - Issue Date (find the date of issuance and **convert it to YYYY-MM-DD format** before returning it)
 
     Here is the certificate image:
     {{media url=photoDataUri}}
