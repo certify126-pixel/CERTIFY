@@ -19,7 +19,7 @@ export const CertificateDocumentSchema = z.object({
     institution: z.string(),
     certificateHash: z.string(),
     status: z.string(),
-    createdAt: z.union([z.date(), z.string()]), // Allow both Date and string for serialization
+    createdAt: z.string(), // Allow only string for serialization
 });
 export type CertificateDocument = z.infer<typeof CertificateDocumentSchema>;
 
