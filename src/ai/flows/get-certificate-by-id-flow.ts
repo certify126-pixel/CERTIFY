@@ -12,7 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import clientPromise from '@/lib/mongodb';
-import { WithId } from 'mongodb';
+import { WithId, Document } from 'mongodb';
 
 
 const GetCertificateByIdInputSchema = z.object({
@@ -20,26 +20,26 @@ const GetCertificateByIdInputSchema = z.object({
 });
 export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 
+// Define a TypeScript interface for the output certificate for type safety
+// without strict Zod validation on the output shape from the DB.
+export interface CertificateDocument extends Document {
+    _id: string;
+    studentName: string;
+    rollNumber: string;
+    certificateId: string;
+    issueDate: string;
+    course: string;
+    institution: string;
+    certificateHash: string;
+    status: string;
+    createdAt: string;
+}
 
-// We can't easily send a Zod schema with a MongoDB `WithId<>` type over the wire,
-// so we define it as a plain object for the output.
-const CertificateSchema = z.object({
-    _id: z.string(), // ObjectId is converted to string
-    studentName: z.string(),
-    rollNumber: z.string(),
-    certificateId: z.string(),
-    issueDate: z.string(),
-    course: z.string(),
-    institution: z.string(),
-    certificateHash: z.string(),
-    status: z.string(),
-    createdAt: z.string(), // Date is converted to string
-});
 
 const GetCertificateByIdOutputSchema = z.object({
   success: z.boolean().describe("Whether the certificate was found successfully."),
   message: z.string().describe("A message indicating the result of the operation."),
-  certificate: CertificateSchema.optional().describe("The certificate data if found."),
+  certificate: z.any().optional().describe("The certificate data if found."),
 });
 export type GetCertificateByIdOutput = z.infer<typeof GetCertificateByIdOutputSchema>;
 

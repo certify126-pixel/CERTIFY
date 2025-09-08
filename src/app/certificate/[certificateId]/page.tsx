@@ -2,26 +2,14 @@
 'use client';
 
 import { CertificateTemplate } from '@/components/certificate-template';
-import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
+import { getCertificateById, type CertificateDocument } from '@/ai/flows/get-certificate-by-id-flow';
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
-type CertificateData = {
-    _id: string;
-    studentName: string;
-    rollNumber: string;
-    certificateId: string;
-    issueDate: string;
-    course: string;
-    institution: string;
-    certificateHash: string;
-};
-
-
 export default function CertificatePage() {
     const params = useParams();
-    const [certificate, setCertificate] = useState<CertificateData | null>(null);
+    const [certificate, setCertificate] = useState<CertificateDocument | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,13 +17,17 @@ export default function CertificatePage() {
         const certificateId = params.certificateId as string;
         
         const fetchCertificate = async () => {
+            if (!certificateId) {
+                setError("No certificate ID provided.");
+                setLoading(false);
+                return;
+            }
             setLoading(true);
+            setError(null);
             try {
                 const result = await getCertificateById({ certificateId });
                 if (result.success && result.certificate) {
-                    // The flow returns an object, we need to cast it.
-                    // A more robust solution might use a Zod schema on the client too.
-                    setCertificate(result.certificate as CertificateData);
+                    setCertificate(result.certificate as CertificateDocument);
                 } else {
                     setError(result.message || "Certificate not found.");
                 }
@@ -46,9 +38,7 @@ export default function CertificatePage() {
             }
         };
 
-        if (certificateId) {
-            fetchCertificate();
-        }
+        fetchCertificate();
     }, [params.certificateId]);
 
     if (loading) {
@@ -84,7 +74,17 @@ export default function CertificatePage() {
          )
     }
 
+    // Cast to the expected props type for the template, ensuring required fields have fallbacks.
+    const templateProps = {
+        studentName: certificate.studentName || "N/A",
+        course: certificate.course || "N/A",
+        issueDate: certificate.issueDate || new Date().toISOString(),
+        institution: certificate.institution || "N/A",
+        certificateId: certificate.certificateId || "N/A",
+        certificateHash: certificate.certificateHash || "N/A",
+    };
+
     return (
-        <CertificateTemplate certificate={certificate} />
+        <CertificateTemplate certificate={templateProps} />
     );
 }
