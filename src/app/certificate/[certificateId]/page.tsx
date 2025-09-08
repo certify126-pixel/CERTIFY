@@ -30,12 +30,12 @@ export default function CertificatePage() {
     useEffect(() => {
         const certificateId = params.certificateId as string;
         
+        if (!certificateId) {
+            // Wait for params to be available
+            return;
+        }
+
         const fetchCertificate = async () => {
-            if (!certificateId) {
-                setError("No certificate ID provided.");
-                setLoading(false);
-                return;
-            }
             setLoading(true);
             setError(null);
             try {
