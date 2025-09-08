@@ -44,7 +44,7 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
 
 
     return (
-        <>
+        <div id="certificate-wrapper">
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Montserrat:wght@400;500&family=Playfair+Display:wght@700&family=Roboto+Mono&display=swap');
                 
@@ -62,6 +62,9 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                     margin: 0;
                     background-color: #fff !important;
                   }
+                  #certificate-wrapper {
+                    padding: 0;
+                  }
                   .certificate-container {
                     box-shadow: none !important;
                     border: 2px solid #5d4037 !important;
@@ -75,7 +78,7 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                   }
                 }
             `}</style>
-            <div id="certificate-wrapper" style={{
+            <div style={{
                 fontFamily: "'Montserrat', sans-serif",
                 display: "flex",
                 justifyContent: "center",
@@ -199,6 +202,6 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                     </footer>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
