@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -89,6 +90,198 @@
     }
 }
 
+/* Certificate Styles */
+.certificate-wrapper {
+    font-family: 'PT Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 40px 40px;
+    box-sizing: border-box;
+}
+
+.certificate-container {
+    width: 1123px;
+    height: 794px;
+    background-color: #f7f6f1;
+    border: 2px solid #5d4037;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 30px;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.certificate-border-main {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border: 5px solid #a1887f;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.certificate-corner {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    border: 5px solid #5d4037;
+}
+.certificate-corner.top-left { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+.certificate-corner.top-right { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+.certificate-corner.bottom-left { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+.certificate-corner.bottom-right { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+
+.certificate-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 100px;
+    color: #5d4037;
+    opacity: 0.05;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.certificate-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-bottom: 2px solid #d7ccc8;
+    padding-bottom: 15px;
+    z-index: 2;
+}
+
+.certificate-logo {
+    width: 80px;
+    height: 80px;
+    margin-right: 20px;
+}
+
+.certificate-institution {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: #3e2723;
+    margin: 0;
+}
+
+.certificate-location {
+    font-size: 14px;
+    color: #6d4c41;
+    margin: 5px 0 0;
+}
+
+.certificate-body {
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 2;
+}
+
+.certificate-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #5d4037;
+    margin: 20px 0 10px;
+}
+
+.certificate-certify-text {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #6d4c41;
+}
+
+.certificate-student-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: #3e2723;
+    margin: 10px 0;
+}
+
+.certificate-award-text {
+    font-size: 16px;
+    margin: 20px 30px 0;
+    line-height: 1.6;
+    color: #6d4c41;
+}
+
+.certificate-signatures {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-top: 40px;
+    z-index: 2;
+}
+.certificate-signature-block {
+    font-size: 14px;
+    color: #3e2723;
+}
+.certificate-signature-line {
+    border-top: 1px solid #3e2723;
+    width: 200px;
+    margin: 40px auto 10px;
+}
+
+.certificate-footer {
+    border-top: 2px solid #d7ccc8;
+    padding-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 2;
+}
+
+.certificate-qr-code {
+    width: 100px;
+    height: 100px;
+}
+
+.certificate-details {
+    text-align: left;
+    font-size: 10px;
+    flex-grow: 1;
+    margin-left: 20px;
+    color: #795548;
+}
+.certificate-detail-label {
+    color: #3e2723;
+    font-weight: 500;
+}
+.certificate-detail-value {
+    margin: 5px 0;
+    word-break: break-all;
+}
+
+.certificate-verification-badge {
+    text-align: center;
+    color: #1e88e5;
+}
+
+.certificate-badge-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 5px;
+}
+
+.certificate-badge-text {
+    font-family: 'PT Sans', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    margin: 0;
+}
+
+
 @media print {
   body {
     -webkit-print-color-adjust: exact;
@@ -99,7 +292,7 @@
     margin: 0;
     background-color: #fff !important;
   }
-  #certificate-wrapper {
+  .certificate-wrapper {
     padding: 0;
   }
   .certificate-container {
