@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A flow for verifying an academic certificate by extracting details from an image using OCR.
+ * @fileOverview A flow for verifying an academic certificate by extracting its hash from an image using OCR.
  *
  * - verifyCertificateWithOcr - A function that handles the OCR and verification process.
  * - VerifyCertificateWithOcrInput - The input type for the verifyCertificateWithOcr function.
@@ -10,7 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { verifyCertificate, VerifyCertificateInput, type VerifyCertificateOutput } from './verify-certificate-flow';
+import { db } from '@/lib/in-memory-db';
+import { type VerifyCertificateOutput } from './verify-certificate-flow';
 
 
 const VerifyCertificateWithOcrInputSchema = z.object({
@@ -22,10 +23,8 @@ const VerifyCertificateWithOcrInputSchema = z.object({
 });
 export type VerifyCertificateWithOcrInput = z.infer<typeof VerifyCertificateWithOcrInputSchema>;
 
-const ExtractedCertificateDetailsSchema = z.object({
-    rollNumber: z.string().describe("The student's roll number or ID extracted from the document."),
-    certificateId: z.string().describe("The unique ID of the certificate extracted from the document."),
-    issueDate: z.string().describe("The date the certificate was issued (YYYY-MM-DD) extracted from the document."),
+const ExtractedCertificateHashSchema = z.object({
+    certificateHash: z.string().describe("The SHA-256 hash extracted from the document."),
 });
 
 
@@ -35,15 +34,13 @@ export async function verifyCertificateWithOcr(input: VerifyCertificateWithOcrIn
 
 
 const ocrPrompt = ai.definePrompt({
-    name: 'ocrCertificatePrompt',
+    name: 'ocrCertificateHashPrompt',
     input: { schema: z.object({ photoDataUri: z.string() }) },
-    output: { schema: ExtractedCertificateDetailsSchema },
+    output: { schema: ExtractedCertificateHashSchema },
     prompt: `You are an expert at extracting information from academic certificates. 
     
-    Analyze the following certificate image and extract the following fields:
-    - Roll Number (look for labels like "Roll No.", "Student ID", "Roll Number")
-    - Certificate ID (look for a unique identifier, often labeled "Certificate No.", "Serial No.", or "ID")
-    - Issue Date (find the date of issuance and **convert it to YYYY-MM-DD format** before returning it)
+    Analyze the following certificate image and extract only the Blockchain Hash (SHA-256) value. 
+    It is a long alphanumeric string.
 
     Here is the certificate image:
     {{media url=photoDataUri}}
@@ -60,22 +57,34 @@ const verifyCertificateWithOcrFlow = ai.defineFlow(
   async (input) => {
     const { photoDataUri } = input;
 
-    // Step 1: Extract details from the image using the OCR prompt
-    const { output: extractedDetails } = await ocrPrompt({ photoDataUri });
+    // Step 1: Extract hash from the image using the OCR prompt
+    const { output: extractedData } = await ocrPrompt({ photoDataUri });
 
-    if (!extractedDetails) {
-        throw new Error('Failed to extract details from the certificate image.');
+    if (!extractedData?.certificateHash) {
+        throw new Error('Failed to extract certificate hash from the image.');
     }
     
-    const { rollNumber, certificateId, issueDate } = extractedDetails;
+    const { certificateHash } = extractedData;
 
-    // Step 2: Call the original verification flow with the extracted details
-    const verificationInput: VerifyCertificateInput = {
-        rollNumber,
-        certificateId,
-        issueDate,
-    };
-    
-    return await verifyCertificate(verificationInput);
+    // Step 2: Look up the certificate in the database using the extracted hash
+    const certificateRecord = db.certificates.find(c => c.certificateHash === certificateHash);
+
+    if (certificateRecord) {
+      return {
+        verified: true,
+        message: 'Certificate has been successfully verified via direct hash lookup.',
+        certificateDetails: {
+          studentName: certificateRecord.studentName,
+          course: certificateRecord.course,
+          institution: certificateRecord.institution,
+        }
+      };
+    } else {
+      return {
+        verified: false,
+        message: 'Verification failed. The hash extracted from the document does not match any record in our database.',
+      };
+    }
   }
 );
+
