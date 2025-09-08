@@ -19,9 +19,21 @@ export const CertificateDocumentSchema = z.object({
     institution: z.string(),
     certificateHash: z.string(),
     status: z.string(),
-    createdAt: z.string(), // Allow only string for serialization
+    createdAt: z.string(), // Changed to string to ensure serializability
 });
-export type CertificateDocument = z.infer<typeof CertificateDocumentSchema>;
+
+export type CertificateDocument = {
+    _id: string;
+    studentName: string;
+    rollNumber: string;
+    certificateId: string;
+    issueDate: string;
+    course: string;
+    institution: string;
+    certificateHash: string;
+    status: string;
+    createdAt: Date; // Keep as Date for in-memory operations
+};
 
 
 export interface UserDocument {

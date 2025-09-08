@@ -34,12 +34,11 @@ import {
   Eye,
 } from "lucide-react";
 import { addCertificate } from "@/ai/flows/add-certificate-flow";
-import { getAllCertificates } from "@/ai/flows/get-all-certificates-flow";
+import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { VerifyCertificateDialog } from "./verify-certificate-dialog";
 import Link from "next/link";
-import { CertificateDocument } from "@/ai/flows/in-memory-db";
 
 
 export function InstitutionDashboard() {
@@ -52,7 +51,7 @@ export function InstitutionDashboard() {
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
   const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
-  const [issuedCertificates, setIssuedCertificates] = React.useState<CertificateDocument[]>([]);
+  const [issuedCertificates, setIssuedCertificates] = React.useState<GetAllCertificatesOutput>([]);
   const [isLoadingCerts, setIsLoadingCerts] = React.useState(true);
 
 

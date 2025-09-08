@@ -12,6 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { certificates, CertificateDocumentSchema } from './in-memory-db';
 
+// The output schema now expects `createdAt` to be a string.
 const GetAllCertificatesOutputSchema = z.array(CertificateDocumentSchema);
 export type GetAllCertificatesOutput = z.infer<typeof GetAllCertificatesOutputSchema>;
 
@@ -26,7 +27,7 @@ const getAllCertificatesFlow = ai.defineFlow(
     outputSchema: GetAllCertificatesOutputSchema,
   },
   async () => {
-    // Return a serializable copy of the certificates array by converting Date objects to strings.
+    // Return a serializable copy of the certificates array by converting Date objects to ISO strings.
     return certificates.map(cert => ({
         ...cert,
         createdAt: cert.createdAt.toISOString(),
