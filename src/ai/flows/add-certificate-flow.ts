@@ -80,7 +80,7 @@ const addCertificateFlow = ai.defineFlow(
 
         return {
           success: true,
-          certificateHash,
+          certificateHash: newCertificate.certificateHash,
           message: 'Certificate data has been successfully stored.',
           certificate: newCertificate,
         };
@@ -90,4 +90,3 @@ const addCertificateFlow = ai.defineFlow(
     }
   }
 );
-
