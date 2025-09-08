@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Database, FilePenLine, PlusCircle, Trash2 } from "lucide-react";
+import { Database, FilePenLine, PlusCircle, Trash2, Eye } from "lucide-react";
+import Link from "next/link";
 
 const initialCertificates = [
   { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", course: "B.Tech in Computer Science", issueDate: "2023-05-20", status: "Issued" },
@@ -55,6 +56,14 @@ export default function ManageCertificatesPage() {
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                        <Link href={`/certificate/${cert.certificateId}`} passHref>
+                           <Button variant="outline" size="icon" asChild>
+                                <a>
+                                    <Eye className="h-4 w-4"/>
+                                    <span className="sr-only">View Certificate</span>
+                                </a>
+                            </Button>
+                        </Link>
                         <Button variant="outline" size="icon">
                             <FilePenLine className="h-4 w-4"/>
                             <span className="sr-only">Edit</span>
