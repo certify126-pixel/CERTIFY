@@ -18,7 +18,7 @@ const GetCertificateByIdInputSchema = z.object({
 });
 export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 
-const CertificateSchema = z.object({
+const GetCertificateByIdOutputSchema = z.object({
     _id: z.string(),
     studentName: z.string(),
     rollNumber: z.string(),
@@ -29,13 +29,7 @@ const CertificateSchema = z.object({
     certificateHash: z.string(),
     status: z.string(),
     createdAt: z.string(),
-});
-
-const GetCertificateByIdOutputSchema = z.object({
-  success: z.boolean().describe("Whether the certificate was found successfully."),
-  message: z.string().describe("A message indicating the result of the operation."),
-  certificate: CertificateSchema.optional().describe("The certificate data if found."),
-});
+}).nullable().describe("The certificate data if found, or null if not found.");
 export type GetCertificateByIdOutput = z.infer<typeof GetCertificateByIdOutputSchema>;
 
 export async function getCertificateById(input: GetCertificateByIdInput): Promise<GetCertificateByIdOutput> {
@@ -53,23 +47,13 @@ const getCertificateByIdFlow = ai.defineFlow(
       const certificate = db.certificates.find(c => c.certificateId === certificateId);
 
       if (certificate) {
-        return {
-          success: true,
-          message: 'Certificate found.',
-          certificate: certificate,
-        };
+        return certificate;
       } else {
-        return {
-          success: false,
-          message: 'Certificate with the specified ID was not found.',
-        };
+        return null;
       }
     } catch (error: any) {
         console.error("Error fetching certificate by ID:", error);
-        return {
-            success: false,
-            message: "An internal error occurred while fetching the certificate."
-        }
+        return null;
     }
   }
 );

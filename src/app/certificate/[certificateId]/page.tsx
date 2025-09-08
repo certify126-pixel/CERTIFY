@@ -40,10 +40,10 @@ export default function CertificatePage() {
             setError(null);
             try {
                 const result = await getCertificateById({ certificateId });
-                if (result.success && result.certificate) {
-                    setCertificate(result.certificate as SerializableCertificate);
+                if (result) {
+                    setCertificate(result as SerializableCertificate);
                 } else {
-                    setError(result.message || "Certificate not found.");
+                    setError("Certificate not found.");
                 }
             } catch (err: any) {
                 setError(err.message || "An error occurred while fetching the certificate.");
