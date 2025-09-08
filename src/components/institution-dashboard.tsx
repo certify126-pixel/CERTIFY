@@ -31,30 +31,15 @@ import {
   User,
   Loader2,
   Copy,
+  Eye,
 } from "lucide-react";
 import { addCertificate } from "@/ai/flows/add-certificate-flow";
+import { getAllCertificates } from "@/ai/flows/get-all-certificates-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { VerifyCertificateDialog } from "./verify-certificate-dialog";
-
-type Certificate = {
-  _id: string;
-  certificateId: string;
-  studentName: string;
-  course: string;
-  institution: string;
-  rollNumber: string;
-  issueDate: string;
-  status: string;
-  certificateHash: string;
-};
-
-// This function would typically be in a service/API file.
-async function getIssuedCertificates(institution: string): Promise<Certificate[]> {
-    // This is a placeholder. In a real app, you'd fetch this from your API.
-    // We can't call MongoDB directly from the client.
-    return [];
-}
+import Link from "next/link";
+import { CertificateDocument } from "@/ai/flows/in-memory-db";
 
 
 export function InstitutionDashboard() {
@@ -67,18 +52,15 @@ export function InstitutionDashboard() {
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
   const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
-  const [issuedCertificates, setIssuedCertificates] = React.useState<Certificate[]>([]);
+  const [issuedCertificates, setIssuedCertificates] = React.useState<CertificateDocument[]>([]);
   const [isLoadingCerts, setIsLoadingCerts] = React.useState(true);
 
 
   const fetchCertificates = React.useCallback(async () => {
     setIsLoadingCerts(true);
     try {
-        // Since we can't directly call the DB from the client,
-        // we'll rely on the manual creation to update the list for this demo.
-        // In a real app, an API endpoint would be called here.
-        // const certs = await getIssuedCertificates(institution);
-        // setIssuedCertificates(certs);
+        const certs = await getAllCertificates();
+        setIssuedCertificates(certs);
     } catch (error) {
         toast({
             variant: "destructive",
@@ -88,7 +70,7 @@ export function InstitutionDashboard() {
     } finally {
         setIsLoadingCerts(false);
     }
-  }, [institution, toast]);
+  }, [toast]);
 
   React.useEffect(() => {
     fetchCertificates();
@@ -128,18 +110,8 @@ export function InstitutionDashboard() {
         });
 
         if (result.success) {
-             const newCertificate: Certificate = {
-                _id: new Date().toISOString(), // Temporary ID
-                studentName,
-                rollNumber,
-                certificateId,
-                issueDate,
-                course,
-                institution,
-                status: 'Issued',
-                certificateHash: result.certificateHash,
-            };
-            setIssuedCertificates(prevCerts => [newCertificate, ...prevCerts]);
+            // After successful creation, refetch all certificates to update the list
+            await fetchCertificates();
 
             toast({
                 title: "Certificate Created",
@@ -186,7 +158,7 @@ export function InstitutionDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{issuedCertificates.length}</div>
-            <p className="text-xs text-muted-foreground">+201 since last year</p>
+            <p className="text-xs text-muted-foreground">+{issuedCertificates.filter(c => new Date(c.createdAt).getFullYear() === new Date().getFullYear()).length} this year</p>
           </CardContent>
         </Card>
         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
@@ -240,9 +212,9 @@ export function InstitutionDashboard() {
               </TableHeader>
               <TableBody>
                 {isLoadingCerts ? (
-                    <TableRow><TableCell colSpan={5} className="text-center">Loading certificates...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-10"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
                 ) : issuedCertificates.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center">No certificates issued yet.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No certificates issued yet.</TableCell></TableRow>
                 ) : (
                     issuedCertificates.map((cert) => (
                     <TableRow key={cert._id}>
@@ -255,7 +227,12 @@ export function InstitutionDashboard() {
                         </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">View Details</Button>
+                           <Button asChild variant="outline" size="icon">
+                            <Link href={`/certificate/${cert.certificateId}`}>
+                                <Eye className="h-4 w-4"/>
+                                <span className="sr-only">View Certificate</span>
+                            </Link>
+                        </Button>
                         </TableCell>
                     </TableRow>
                     ))
