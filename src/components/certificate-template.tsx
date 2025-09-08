@@ -45,39 +45,6 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
 
     return (
         <div id="certificate-wrapper">
-            <style jsx global>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Montserrat:wght@400;500&family=Playfair+Display:wght@700&family=Roboto+Mono&display=swap');
-                
-                .certificate-page-body {
-                     background-color: #e0e0e0;
-                }
-                
-                @media print {
-                  body {
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                  }
-                   .certificate-page-body {
-                    padding: 0;
-                    margin: 0;
-                    background-color: #fff !important;
-                  }
-                  #certificate-wrapper {
-                    padding: 0;
-                  }
-                  .certificate-container {
-                    box-shadow: none !important;
-                    border: 2px solid #5d4037 !important;
-                    width: 100% !important;
-                    height: 100vh !important;
-                    margin: 0;
-                    padding: 30px !important;
-                  }
-                  .print-hide {
-                      display: none;
-                  }
-                }
-            `}</style>
             <div style={{
                 fontFamily: "'Montserrat', sans-serif",
                 display: "flex",
