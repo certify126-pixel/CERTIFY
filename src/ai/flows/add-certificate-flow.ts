@@ -28,7 +28,18 @@ const AddCertificateOutputSchema = z.object({
   success: z.boolean().describe("Whether the certificate was added successfully."),
   certificateHash: z.string().describe("The SHA-256 hash of the certificate data."),
   message: z.string().describe("A message indicating the result of the operation."),
-  firestoreId: z.string().describe("The ID of the document in the database."),
+  certificate: z.object({
+    _id: z.string(),
+    studentName: z.string(),
+    rollNumber: z.string(),
+    certificateId: z.string(),
+    issueDate: z.string(),
+    course: z.string(),
+    institution: z.string(),
+    certificateHash: z.string(),
+    status: z.string(),
+    createdAt: z.string(),
+  })
 });
 export type AddCertificateOutput = z.infer<typeof AddCertificateOutputSchema>;
 
@@ -71,7 +82,7 @@ const addCertificateFlow = ai.defineFlow(
           success: true,
           certificateHash,
           message: 'Certificate data has been successfully stored.',
-          firestoreId: newCertificate._id,
+          certificate: newCertificate,
         };
     } catch (error: any) {
         console.error("Error adding certificate:", error);
