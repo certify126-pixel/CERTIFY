@@ -4,7 +4,7 @@
 import { CertificateTemplate } from '@/components/certificate-template';
 import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
 import React, { useEffect, useState, useRef } from 'react';
-import { Loader2, Printer, Download } from 'lucide-react';
+import { Loader2, Download } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import html2canvas from 'html2canvas';
