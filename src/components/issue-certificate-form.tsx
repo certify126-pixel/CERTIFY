@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileCheck, Copy, Download, PartyPopper } from "lucide-react";
 import Link from "next/link";
 import { DialogFooter } from "./ui/dialog";
-import { addCertificate, AddCertificateInput } from "@/ai/flows/add-certificate-flow";
+import { addCertificate, AddCertificateInput, AddCertificateOutput } from "@/ai/flows/add-certificate-flow";
 
 type IssueCertificateFormProps = {
     onFinished: () => void;
@@ -51,7 +51,7 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
     setIsCreating(true);
     
     try {
-        const result = await addCertificate(certificateData);
+        const result: AddCertificateOutput = await addCertificate(certificateData);
 
         if (result.success && result.certificateHash) {
             toast({
@@ -60,8 +60,8 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
             });
             setCreationResult({ 
                 hash: result.certificateHash, 
-                name: certificateData.studentName,
-                certificateId: certificateData.certificateId,
+                name: result.certificate.studentName,
+                certificateId: result.certificate.certificateId,
             });
         } else {
             throw new Error(result.message);
