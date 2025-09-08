@@ -2,10 +2,12 @@
 'use client';
 
 import { CertificateTemplate } from '@/components/certificate-template';
-import { getCertificateById, type CertificateDocument } from '@/ai/flows/get-certificate-by-id-flow';
+import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
+import type { CertificateDocument } from '@/ai/flows/in-memory-db';
 import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function CertificatePage() {
     const params = useParams();
@@ -41,6 +43,10 @@ export default function CertificatePage() {
         fetchCertificate();
     }, [params.certificateId]);
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     if (loading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-gray-200">
@@ -74,7 +80,6 @@ export default function CertificatePage() {
          )
     }
 
-    // Cast to the expected props type for the template, ensuring required fields have fallbacks.
     const templateProps = {
         studentName: certificate.studentName || "N/A",
         course: certificate.course || "N/A",
@@ -85,6 +90,14 @@ export default function CertificatePage() {
     };
 
     return (
-        <CertificateTemplate certificate={templateProps} />
+        <div className="bg-gray-200 certificate-page-body">
+             <div className="p-4 text-center print-hide">
+                <Button onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print / Save as PDF
+                </Button>
+            </div>
+            <CertificateTemplate certificate={templateProps} />
+        </div>
     );
 }

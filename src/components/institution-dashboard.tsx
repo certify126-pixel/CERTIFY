@@ -32,6 +32,7 @@ import {
   Loader2,
   Copy,
   Eye,
+  Download,
 } from "lucide-react";
 import { addCertificate } from "@/ai/flows/add-certificate-flow";
 import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
@@ -50,7 +51,7 @@ export function InstitutionDashboard() {
   const [issueDate, setIssueDate] = React.useState("");
   const [course, setCourse] = React.useState("");
   const [institution, setInstitution] = React.useState("Jawaharlal Nehru University"); // Hardcoded for now
-  const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string } | null>(null);
+  const [creationResult, setCreationResult] = React.useState<{ hash: string; name: string, certificateId: string } | null>(null);
   const [issuedCertificates, setIssuedCertificates] = React.useState<GetAllCertificatesOutput>([]);
   const [isLoadingCerts, setIsLoadingCerts] = React.useState(true);
 
@@ -109,15 +110,13 @@ export function InstitutionDashboard() {
         });
 
         if (result.success) {
-            // After successful creation, refetch all certificates to update the list
             await fetchCertificates();
 
             toast({
                 title: "Certificate Created",
                 description: `Certificate for ${studentName} has been successfully created and stored.`,
             });
-            setCreationResult({ hash: result.certificateHash, name: studentName });
-            // Clear form
+            setCreationResult({ hash: result.certificateHash, name: studentName, certificateId });
             setStudentName("");
             setRollNumber("");
             setCertificateId("");
@@ -227,7 +226,7 @@ export function InstitutionDashboard() {
                         </TableCell>
                         <TableCell className="text-right">
                            <Button asChild variant="outline" size="icon">
-                            <Link href={`/certificate/${cert.certificateId}`}>
+                            <Link href={`/certificate/${cert.certificateId}`} target="_blank">
                                 <Eye className="h-4 w-4"/>
                                 <span className="sr-only">View Certificate</span>
                             </Link>
@@ -295,18 +294,26 @@ export function InstitutionDashboard() {
                   <Alert className="mt-4 bg-primary/5 border-primary/20">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                     <AlertTitle className="text-primary font-headline">Certificate Created for {creationResult.name}</AlertTitle>
-                    <AlertDescription className="mt-2 text-primary/80">
-                      <p className="font-semibold">Generated Hash:</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input 
-                          readOnly 
-                          value={creationResult.hash} 
-                          className="text-xs h-8 flex-1 truncate"
-                        />
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyHash}>
-                          <Copy className="h-4 w-4" />
+                    <AlertDescription className="mt-2 text-primary/80 space-y-3">
+                       <div>
+                        <p className="font-semibold text-xs">Generated Hash:</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input 
+                            readOnly 
+                            value={creationResult.hash} 
+                            className="text-xs h-8 flex-1 truncate"
+                            />
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyHash}>
+                            <Copy className="h-4 w-4" />
+                            </Button>
+                        </div>
+                       </div>
+                        <Button asChild className="w-full">
+                            <Link href={`/certificate/${creationResult.certificateId}`} target="_blank">
+                                <Download className="mr-2 h-4 w-4" />
+                                View & Download Certificate
+                            </Link>
                         </Button>
-                      </div>
                     </AlertDescription>
                   </Alert>
                 )}

@@ -17,11 +17,9 @@ type CertificateProps = {
 export function CertificateTemplate({ certificate }: CertificateProps) {
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(certificate.certificateHash)}`;
     
-    // Format date nicely, e.g., "8th of September, 2025"
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString);
-             // to fix timezone issues
             const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
             const day = utcDate.getDate();
             const month = utcDate.toLocaleString('default', { month: 'long' });
@@ -40,7 +38,7 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
 
             return `${day}${daySuffix} of ${month}, ${year}`;
         } catch (e) {
-            return dateString; // fallback to original string
+            return dateString;
         }
     };
 
@@ -50,6 +48,10 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Montserrat:wght@400;500&family=Playfair+Display:wght@700&family=Roboto+Mono&display=swap');
                 
+                .certificate-page-body {
+                     background-color: #e0e0e0;
+                }
+                
                 @media print {
                   body {
                     -webkit-print-color-adjust: exact;
@@ -58,27 +60,29 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                    .certificate-page-body {
                     padding: 0;
                     margin: 0;
-                    background-color: #fff;
+                    background-color: #fff !important;
                   }
                   .certificate-container {
                     box-shadow: none !important;
                     border: 2px solid #5d4037 !important;
                     width: 100% !important;
-                    height: 100% !important;
+                    height: 100vh !important;
+                    margin: 0;
+                    padding: 30px !important;
+                  }
+                  .print-hide {
+                      display: none;
                   }
                 }
             `}</style>
-            <div style={{
+            <div id="certificate-wrapper" style={{
                 fontFamily: "'Montserrat', sans-serif",
-                backgroundColor: "#e0e0e0",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: "40px",
+                padding: "0 40px 40px",
                 boxSizing: "border-box",
-                minHeight: "100vh",
-                margin: 0
-            }} className="certificate-page-body">
+            }}>
                 <div style={{
                     width: "1123px",
                     height: "794px",
@@ -119,7 +123,7 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                         fontWeight: 700,
                         pointerEvents: "none",
                         zIndex: 0
-                    }}>Certify</div>
+                    }}>Q Certify</div>
 
                     <header style={{
                         display: "flex",
@@ -183,14 +187,14 @@ export function CertificateTemplate({ certificate }: CertificateProps) {
                             <strong style={{color: "#3e2723", fontWeight: 500}}>Certify Unique ID:</strong>
                             <p style={{fontFamily: "'Roboto Mono', monospace", margin: "5px 0", wordBreak: "break-all"}}>{certificate.certificateId}</p>
                             <strong style={{color: "#3e2723", fontWeight: 500}}>Blockchain Hash (SHA-256):</strong>
-                            <p style={{fontFamily: "'Roboto Mono', monospace", margin: "5px 0", wordBreak: "break-all"}}>{certificate.certificateHash}</p>
+                            <p style={{fontFamily: "'Roboto Mono', monospace', margin: "5px 0", wordBreak: "break-all"}}>{certificate.certificateHash}</p>
                         </div>
                         <div style={{textAlign: "center", color: "#1e88e5"}}>
                             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{width: '60px', height: '60px', marginBottom: '5px'}}>
                                 <circle cx="50" cy="50" r="48" fill="none" stroke="#1e88e5" strokeWidth="3"/>
                                 <path d="M30 50 L45 65 L70 40" stroke="#1e88e5" strokeWidth="8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                            <p style={{fontFamily: "'Montserrat', sans-serif", fontWeight: 500, fontSize: "12px", margin: 0}}>Verified by Certify</p>
+                            <p style={{fontFamily: "'Montserrat', sans-serif", fontWeight: 500, fontSize: "12px", margin: 0}}>Verified by Q Certify</p>
                         </div>
                     </footer>
                 </div>
