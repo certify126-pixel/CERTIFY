@@ -24,7 +24,7 @@ export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSche
 // We can't easily send a Zod schema with a MongoDB `WithId<>` type over the wire,
 // so we define it as a plain object for the output.
 const CertificateSchema = z.object({
-    _id: z.any(), // Will be ObjectId
+    _id: z.string(), // ObjectId is converted to string
     studentName: z.string(),
     rollNumber: z.string(),
     certificateId: z.string(),
@@ -33,7 +33,7 @@ const CertificateSchema = z.object({
     institution: z.string(),
     certificateHash: z.string(),
     status: z.string(),
-    createdAt: z.any(), // Will be Date
+    createdAt: z.string(), // Date is converted to string
 });
 
 const GetCertificateByIdOutputSchema = z.object({
@@ -62,8 +62,8 @@ const getCertificateByIdFlow = ai.defineFlow(
       const certificateRecord = await certificatesCollection.findOne({ certificateId });
 
       if (certificateRecord) {
-        // The _id is an ObjectId, which can't be directly serialized in Next.js server actions
-        // by default. We convert it to a string.
+        // The _id is an ObjectId and createdAt is a Date, which can't be directly serialized 
+        // in Next.js server actions. We must convert them to strings.
         const serializableRecord = {
           ...certificateRecord,
           _id: certificateRecord._id.toString(),
