@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for fetching a single certificate by its unique ID from Firestore.
+ * @fileOverview A flow for fetching a single certificate by its unique ID from the in-memory database.
  *
  * - getCertificateById - A function that fetches a certificate by its ID.
  * - GetCertificateByIdInput - The input type for the getCertificateById function.
@@ -11,20 +11,30 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
-
+import { db } from '@/lib/in-memory-db';
 
 const GetCertificateByIdInputSchema = z.object({
   certificateId: z.string().describe("The unique ID of the certificate to fetch."),
 });
 export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 
+const CertificateSchema = z.object({
+    _id: z.string(),
+    studentName: z.string(),
+    rollNumber: z.string(),
+    certificateId: z.string(),
+    issueDate: z.string(),
+    course: z.string(),
+    institution: z.string(),
+    certificateHash: z.string(),
+    status: z.string(),
+    createdAt: z.string(),
+});
 
 const GetCertificateByIdOutputSchema = z.object({
   success: z.boolean().describe("Whether the certificate was found successfully."),
   message: z.string().describe("A message indicating the result of the operation."),
-  certificate: z.any().optional().describe("The certificate data if found."),
+  certificate: CertificateSchema.optional().describe("The certificate data if found."),
 });
 export type GetCertificateByIdOutput = z.infer<typeof GetCertificateByIdOutputSchema>;
 
@@ -40,25 +50,13 @@ const getCertificateByIdFlow = ai.defineFlow(
   },
   async ({ certificateId }) => {
     try {
-      const certificatesRef = collection(db, 'certificates');
-      const q = query(certificatesRef, where('certificateId', '==', certificateId));
-      const querySnapshot = await getDocs(q);
+      const certificate = db.certificates.find(c => c.certificateId === certificateId);
 
-      if (!querySnapshot.empty) {
-        const certificateDoc = querySnapshot.docs[0];
-        const certificateData = certificateDoc.data();
-
-        // Create a serializable copy of the object
-        const serializableCertificate = {
-          ...certificateData,
-          _id: certificateDoc.id,
-          createdAt: (certificateData.createdAt as Timestamp).toDate().toISOString(),
-        };
-
+      if (certificate) {
         return {
           success: true,
           message: 'Certificate found.',
-          certificate: serializableCertificate,
+          certificate: certificate,
         };
       } else {
         return {

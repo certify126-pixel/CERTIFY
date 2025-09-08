@@ -2,7 +2,6 @@
 "use client";
 
 import React from "react";
-import { addCertificateAction } from "@/app/actions/addCertificateAction";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileCheck, Copy, Download, PartyPopper } from "lucide-react";
 import Link from "next/link";
 import { DialogFooter } from "./ui/dialog";
+import { addCertificate, AddCertificateInput } from "@/ai/flows/add-certificate-flow";
 
 type IssueCertificateFormProps = {
     onFinished: () => void;
@@ -35,22 +35,33 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
     }
   };
 
-  const handleCreateCertificate = async (formData: FormData) => {
+  const handleCreateCertificate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const certificateData: AddCertificateInput = {
+        studentName: formData.get('studentName') as string,
+        rollNumber: formData.get('rollNumber') as string,
+        certificateId: formData.get('certificateId') as string,
+        issueDate: formData.get('issueDate') as string,
+        course: formData.get('course') as string,
+        institution: formData.get('institution') as string,
+    };
+    
     setCreationResult(null);
     setIsCreating(true);
     
     try {
-        const result = await addCertificateAction(formData);
+        const result = await addCertificate(certificateData);
 
         if (result.success && result.certificateHash) {
             toast({
                 title: "Certificate Created",
-                description: `Certificate for ${formData.get('studentName')} has been successfully created and stored.`,
+                description: `Certificate for ${certificateData.studentName} has been successfully created and stored.`,
             });
             setCreationResult({ 
                 hash: result.certificateHash, 
-                name: formData.get('studentName') as string, 
-                certificateId: formData.get('certificateId') as string 
+                name: certificateData.studentName,
+                certificateId: certificateData.certificateId,
             });
         } else {
             throw new Error(result.message);
@@ -67,7 +78,6 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
   };
   
   const handleDone = () => {
-    // Manually reset form fields
     const form = document.getElementById('issue-certificate-form') as HTMLFormElement;
     if(form) form.reset();
     resetForm();
@@ -112,7 +122,7 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
 
   return (
     <>
-      <form action={handleCreateCertificate} id="issue-certificate-form" className="space-y-4 pt-4">
+      <form onSubmit={handleCreateCertificate} id="issue-certificate-form" className="space-y-4 pt-4">
         <div className="space-y-2">
             <Label htmlFor="student-name">Student Name</Label>
             <Input id="student-name" name="studentName" placeholder="e.g., Jane Doe" required />

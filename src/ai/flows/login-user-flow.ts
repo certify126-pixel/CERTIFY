@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for logging in a user against Firestore.
+ * @fileOverview A flow for logging in a user against the in-memory database.
  *
  * - loginUser - A function that handles user login.
  * - LoginUserInput - The input type for the loginUser function.
@@ -12,9 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-
+import { db } from '@/lib/in-memory-db';
 
 const LoginUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),
@@ -64,19 +62,15 @@ const loginUserFlow = ai.defineFlow(
         };
     }
     
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", email));
-    const querySnapshot = await getDocs(q);
+    const user = db.users.find(u => u.email === email);
 
-    if (querySnapshot.empty) {
+    if (!user) {
       return {
         success: false,
         message: 'Invalid email or password.',
       };
     }
     
-    const userDoc = querySnapshot.docs[0];
-    const user = userDoc.data();
     const hashedPassword = hashPassword(password);
     
     if (user.password !== hashedPassword) {
@@ -90,7 +84,7 @@ const loginUserFlow = ai.defineFlow(
       success: true,
       message: 'Login successful.',
       user: {
-        id: userDoc.id,
+        id: user.id,
         email: user.email,
         role: user.role,
       }

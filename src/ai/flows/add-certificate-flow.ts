@@ -1,9 +1,8 @@
 
-// add-certificate-flow.ts
 'use server';
 
 /**
- * @fileOverview A flow for adding new certificate data to Firestore.
+ * @fileOverview A flow for adding new certificate data to the in-memory database.
  *
  * - addCertificate - A function that handles adding a new certificate.
  * - AddCertificateInput - The input type for the addCertificate function.
@@ -13,8 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/in-memory-db';
 
 const AddCertificateInputSchema = z.object({
   studentName: z.string().describe("The full name of the student."),
@@ -30,7 +28,7 @@ const AddCertificateOutputSchema = z.object({
   success: z.boolean().describe("Whether the certificate was added successfully."),
   certificateHash: z.string().describe("The SHA-256 hash of the certificate data."),
   message: z.string().describe("A message indicating the result of the operation."),
-  firestoreId: z.string().describe("The ID of the document in Firestore."),
+  firestoreId: z.string().describe("The ID of the document in the database."),
 });
 export type AddCertificateOutput = z.infer<typeof AddCertificateOutputSchema>;
 
@@ -53,6 +51,7 @@ const addCertificateFlow = ai.defineFlow(
     const certificateHash = hash.digest('hex');
 
     const newCertificate = {
+        _id: `cert_${Date.now()}`,
         studentName,
         rollNumber,
         certificateId,
@@ -61,21 +60,21 @@ const addCertificateFlow = ai.defineFlow(
         institution,
         certificateHash,
         status: 'Issued',
-        createdAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
     };
 
     try {
-        const docRef = await addDoc(collection(db, "certificates"), newCertificate);
-        console.log(`Stored certificate for ${input.studentName}. Firestore ID: ${docRef.id}`);
+        db.certificates.push(newCertificate);
+        console.log(`Stored certificate for ${input.studentName}. ID: ${newCertificate._id}`);
 
         return {
           success: true,
           certificateHash,
-          message: 'Certificate data has been successfully stored in Firestore.',
-          firestoreId: docRef.id,
+          message: 'Certificate data has been successfully stored.',
+          firestoreId: newCertificate._id,
         };
     } catch (error: any) {
-        console.error("Error adding certificate to Firestore:", error);
+        console.error("Error adding certificate:", error);
         throw new Error("Failed to store certificate data.");
     }
   }

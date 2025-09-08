@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for registering a new user in Firestore.
+ * @fileOverview A flow for registering a new user in the in-memory database.
  *
  * - registerUser - A function that handles new user registration.
  * - RegisterUserInput - The input type for the registerUser function.
@@ -12,9 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
-
+import { db } from '@/lib/in-memory-db';
 
 const RegisterUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),
@@ -47,11 +45,9 @@ const registerUserFlow = ai.defineFlow(
     outputSchema: RegisterUserOutputSchema,
   },
   async ({ email, password, role }) => {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", email));
-    const querySnapshot = await getDocs(q);
+    const existingUser = db.users.find(u => u.email === email);
 
-    if (!querySnapshot.empty) {
+    if (existingUser) {
       return {
         success: false,
         message: 'A user with this email address already exists.',
@@ -61,13 +57,14 @@ const registerUserFlow = ai.defineFlow(
     const hashedPassword = hashPassword(password);
 
     const newUser = {
+      id: `user_${Date.now()}`,
       email,
       password: hashedPassword,
       role,
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
     };
     
-    await addDoc(usersRef, newUser);
+    db.users.push(newUser);
 
     return {
       success: true,
