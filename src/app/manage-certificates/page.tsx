@@ -1,21 +1,79 @@
 
 "use client";
+import React, { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Database, FilePenLine, PlusCircle, Trash2, Eye } from "lucide-react";
+import { Database, FilePenLine, PlusCircle, Trash2, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const initialCertificates = [
-  { id: "1", certificateId: "JHU-84321-2023", studentName: "Rohan Kumar", course: "B.Tech in Computer Science", issueDate: "2023-05-20", status: "Issued" },
-  { id: "2", certificateId: "JHU-55432-2022", studentName: "Priya Sharma", course: "MBA", issueDate: "2022-06-15", status: "Issued" },
-  { id: "3", certificateId: "JHU-19876-2023", studentName: "Amit Singh", course: "B.A. in History", issueDate: "2023-05-20", status: "Issued" },
-  { id: "4", certificateId: "JHU-34567-2021", studentName: "Anjali Devi", course: "M.Sc in Physics", issueDate: "2021-07-22", status: "Revoked" },
-  { id: "5", certificateId: "JHU-67890-2023", studentName: "Suresh Gupta", course: "B.Com", issueDate: "2023-05-20", status: "Issued" },
-];
+import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
+import { deleteCertificate } from "@/ai/flows/delete-certificate-flow";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function ManageCertificatesPage() {
+  const [certificates, setCertificates] = useState<GetAllCertificatesOutput>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchCertificates = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const fetchedCertificates = await getAllCertificates();
+      setCertificates(fetchedCertificates);
+    } catch (error) {
+      console.error("Failed to fetch certificates:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch certificates.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
+
+  const handleDelete = async (firestoreId: string) => {
+    setIsDeleting(firestoreId);
+    try {
+      const result = await deleteCertificate({ firestoreId });
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Certificate has been revoked.",
+        });
+        // Refresh the list after deletion
+        setCertificates(certs => certs.filter(c => c._id !== firestoreId));
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Could not revoke certificate.",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   return (
     <main className="flex-1 p-6">
       <Card>
@@ -44,8 +102,21 @@ export default function ManageCertificatesPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {initialCertificates.map((cert) => (
-                    <TableRow key={cert.id}>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                    </TableCell>
+                  </TableRow>
+                ) : certificates.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      No certificates have been issued yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  certificates.map((cert) => (
+                    <TableRow key={cert._id}>
                     <TableCell className="font-medium">{cert.certificateId}</TableCell>
                     <TableCell>{cert.studentName}</TableCell>
                     <TableCell>{cert.course}</TableCell>
@@ -62,17 +133,38 @@ export default function ManageCertificatesPage() {
                                 <span className="sr-only">View Certificate</span>
                             </Link>
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" disabled>
                             <FilePenLine className="h-4 w-4"/>
                             <span className="sr-only">Edit</span>
                         </Button>
-                         <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4"/>
-                            <span className="sr-only">Revoke</span>
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" disabled={isDeleting === cert._id}>
+                              {isDeleting === cert._id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4"/>}
+                              <span className="sr-only">Revoke</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure you want to revoke this certificate?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the certificate
+                                record from the database.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(cert._id)} className="bg-destructive hover:bg-destructive/90">
+                                Yes, Revoke Certificate
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
                     </TableCell>
                     </TableRow>
-                ))}
+                  ))
+                )}
                 </TableBody>
             </Table>
         </CardContent>
