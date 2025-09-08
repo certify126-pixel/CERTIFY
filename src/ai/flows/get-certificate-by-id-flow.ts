@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,6 +11,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { db } from '@/lib/in-memory-db';
+import { prisma } from "@/lib/prisma";
+import { toast } from "sonner";
 
 const GetCertificateByIdInputSchema = z.object({
   certificateId: z.string().describe("The unique ID of the certificate to fetch."),
@@ -59,3 +60,28 @@ const getCertificateByIdFlow = ai.defineFlow(
     }
   }
 );
+
+export async function getCertificateById(certificateId: string) {
+  try {
+    const certificate = await prisma.certificate.findUnique({
+      where: {
+        certificateId: certificateId,
+      },
+    });
+
+    if (!certificate) {
+      toast.error(`Certificate not found`, {
+        description: `No certificate exists with ID: ${certificateId}`
+      });
+      return null;
+    }
+
+    return certificate;
+  } catch (error) {
+    console.error("Error fetching certificate:", error);
+    toast.error("Failed to fetch certificate", {
+      description: "There was an error retrieving the certificate details."
+    });
+    return null;
+  }
+}

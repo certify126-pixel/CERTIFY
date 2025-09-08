@@ -1,6 +1,7 @@
-
 "use client";
 
+import React, { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,10 +17,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle, FileCheck, Upload, File as FileIcon } from "lucide-react";
-import React from "react";
 import { verifyCertificate, VerifyCertificateOutput } from "@/ai/flows/verify-certificate-flow";
 import { verifyCertificateWithOcr } from "@/ai/flows/verify-certificate-with-ocr-flow";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { getCertificateById } from "@/ai/flows/get-certificate-by-id-flow";
 
 
 export type VerificationHistoryItem = VerifyCertificateOutput & {
@@ -37,7 +38,7 @@ type VerifyCertificateDialogProps = {
 export function VerifyCertificateDialog({ children, onVerificationComplete }: VerifyCertificateDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
-  const [isVerifying, setIsVerifying] = React.useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = React.useState<VerifyCertificateOutput | null>(null);
 
   const [rollNumber, setRollNumber] = React.useState("");
@@ -84,22 +85,43 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
 
   const handleSubmitManual = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!validateCertificateId(certificateId)) {
+      toast.error("Invalid Certificate ID", {
+        description: "Certificate ID must contain only numbers"
+      });
+      return;
+    }
+
+    if (!validateRollNumber(rollNumber)) {
+      toast.error("Invalid Roll Number", {
+        description: "Roll number format should be XX-12345 or XXX-12345"
+      });
+      return;
+    }
+
+    if (!issueDate) {
+      toast.error("Issue Date Required", {
+        description: "Please select the certificate issue date"
+      });
+      return;
+    }
+
     setIsVerifying(true);
     setVerificationResult(null);
 
     const submittedDetails = { rollNumber, certificateId, issueDate };
 
     try {
-        const result = await verifyCertificate(submittedDetails);
-        handleVerificationResult(result, submittedDetails);
+      const result = await verifyCertificate(submittedDetails);
+      handleVerificationResult(result, submittedDetails);
     } catch(error) {
-        toast({
-            variant: "destructive",
-            title: "Verification Error",
-            description: "An unexpected error occurred while verifying the certificate.",
-        });
+      toast.error("Verification Error", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     } finally {
-        setIsVerifying(false);
+      setIsVerifying(false);
     }
   };
 
@@ -140,13 +162,107 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
     }
   }
 
+  const handleVerify = async () => {
+    if (!certificateId) {
+      toast({
+        variant: "destructive",
+        title: "Verification Error",
+        description: "Please enter a certificate ID",
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const certificate = await getCertificateById(certificateId);
+      if (certificate) {
+        toast.success("Certificate verified", {
+          description: `Certificate for ${certificate.studentName} is valid.`
+        });
+      }
+    } catch (error) {
+      // Error is already handled in getCertificateById
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // Add input validation
+  const validateCertificateId = (id: string) => /^\d+$/.test(id);
+  const validateRollNumber = (roll: string) => /^[A-Z]{2,3}-\d+$/.test(roll);
+
+  // Update the issue date input
+  const issueDateInput = (
+    <div className="grid grid-cols-4 items-center gap-4">
+      <Label htmlFor="issueDate" className="text-right">
+        Issue Date
+      </Label>
+      <Input 
+        id="issueDate" 
+        type="date" 
+        value={issueDate} 
+        onChange={(e) => setIssueDate(e.target.value)}
+        max={new Date().toISOString().split('T')[0]}
+        className="col-span-3" 
+        required
+      />
+    </div>
+  );
+
+  // Update the certificate ID input with validation
+  const certificateIdInput = (
+    <div className="grid grid-cols-4 items-center gap-4">
+      <Label htmlFor="certificateId" className="text-right">
+        Certificate ID
+      </Label>
+      <Input 
+        id="certificateId" 
+        value={certificateId} 
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || /^\d+$/.test(value)) {
+            setCertificateId(value);
+          }
+        }}
+        placeholder="e.g., 123456789" 
+        className="col-span-3" 
+        required
+      />
+    </div>
+  );
+
+  // Update the roll number input with validation
+  const rollNumberInput = (
+    <div className="grid grid-cols-4 items-center gap-4">
+      <Label htmlFor="rollNumber" className="text-right">
+        Roll Number
+      </Label>
+      <Input 
+        id="rollNumber" 
+        value={rollNumber} 
+        onChange={(e) => {
+          const value = e.target.value.toUpperCase();
+          if (value === '' || /^[A-Z-\d]*$/.test(value)) {
+            setRollNumber(value);
+          }
+        }}
+        placeholder="e.g., JNU-12345" 
+        className="col-span-3" 
+        required
+      />
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (!isOpen) {
-            resetForm();
+          resetForm();
         }
-    }}>
+      }}
+    >
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -166,29 +282,20 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
             <TabsContent value="manual">
                 <form onSubmit={handleSubmitManual}>
                     <div className="grid gap-4 py-6">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="rollNumber" className="text-right">
-                            Roll Number
-                        </Label>
-                        <Input id="rollNumber" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} placeholder="e.g., RNC-12345" className="col-span-3" required/>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="certificateId" className="text-right">
-                            Certificate ID
-                        </Label>
-                        <Input id="certificateId" value={certificateId} onChange={(e) => setCertificateId(e.target.value)} placeholder="e.g., JHU-84321-2023" className="col-span-3" required/>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="issueDate" className="text-right">
-                            Issue Date
-                        </Label>
-                        <Input id="issueDate" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="col-span-3" required/>
-                        </div>
+                        {rollNumberInput}
+                        {certificateIdInput}
+                        {issueDateInput}
                     </div>
                     <DialogFooter>
                         <Button type="submit" disabled={isVerifying}>
-                        {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isVerifying ? "Verifying..." : "Submit for Verification"}
+                        {isVerifying ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          "Submit for Verification"
+                        )}
                         </Button>
                     </DialogFooter>
                 </form>

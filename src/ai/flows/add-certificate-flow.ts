@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -10,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { createHash } from 'crypto';
 import { db } from '@/lib/in-memory-db';
 
@@ -43,11 +42,35 @@ const AddCertificateOutputSchema = z.object({
 });
 export type AddCertificateOutput = z.infer<typeof AddCertificateOutputSchema>;
 
+const certificateSchema = z.object({
+  recipientName: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name cannot exceed 50 characters')
+    .regex(/^[a-zA-Z\s]+$/, 'Name must contain only letters and spaces'),
+    
+  certificateId: z.string()
+    .regex(/^[A-Z0-9-]{8,}$/, 'Invalid certificate ID format'),
+    
+  issuerName: z.string()
+    .min(2, 'Issuer name must be at least 2 characters')
+    .max(50, 'Issuer name cannot exceed 50 characters')
+    .regex(/^[a-zA-Z\s]+$/, 'Issuer name must contain only letters and spaces'),
+    
+  description: z.string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description cannot exceed 500 characters')
+    .regex(/^[a-zA-Z0-9\s.,!?-]+$/, 'Description contains invalid characters'),
+    
+  issueDate: z.date(),
+  expiryDate: z.date().optional(),
+  certificateType: z.enum(['academic', 'professional', 'achievement'])
+});
+
 export async function addCertificate(input: AddCertificateInput): Promise<AddCertificateOutput> {
-  return addCertificateFlow(input);
+  return addCertificateAiFlow(input);
 }
 
-const addCertificateFlow = ai.defineFlow(
+const addCertificateAiFlow = ai.defineFlow(
   {
     name: 'addCertificateFlow',
     inputSchema: AddCertificateInputSchema,
@@ -90,3 +113,24 @@ const addCertificateFlow = ai.defineFlow(
     }
   }
 );
+
+export async function addCertificateFlow(data: unknown) {
+  try {
+    const validatedData = certificateSchema.parse(data);
+    // Sanitize the data
+    const sanitizedData = {
+      ...validatedData,
+      recipientName: validatedData.recipientName.trim(),
+      issuerName: validatedData.issuerName.trim(),
+      description: validatedData.description.trim()
+    };
+    
+    return sanitizedData;
+    
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`);
+    }
+    throw error;
+  }
+}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -28,41 +27,38 @@ import {
   Loader2,
   Eye,
 } from "lucide-react";
-import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
-import { useToast } from "@/hooks/use-toast";
-import { VerifyCertificateDialog } from "./verify-certificate-dialog";
 import Link from "next/link";
+import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
+import { VerifyCertificateDialog } from "./verify-certificate-dialog";
 import { IssueCertificateDialog } from "./issue-certificate-dialog";
-
+import { Toaster } from "sonner";
+import { toast } from "sonner";
 
 export function InstitutionDashboard() {
-  const { toast } = useToast();
   const [issuedCertificates, setIssuedCertificates] = React.useState<GetAllCertificatesOutput>([]);
   const [isLoadingCerts, setIsLoadingCerts] = React.useState(true);
-
 
   const fetchCertificates = React.useCallback(async () => {
     setIsLoadingCerts(true);
     try {
-        const certs = await getAllCertificates();
-        setIssuedCertificates(certs);
+      const certs = await getAllCertificates();
+      setIssuedCertificates(certs);
     } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Failed to load certificates",
-            description: "Could not fetch the list of issued certificates.",
-        });
+      toast.error("Failed to load certificates", {
+        description: "Could not fetch the list of issued certificates.",
+      });
     } finally {
-        setIsLoadingCerts(false);
+      setIsLoadingCerts(false);
     }
-  }, [toast]);
+  }, []);
 
   React.useEffect(() => {
     fetchCertificates();
   }, [fetchCertificates]);
 
   return (
-    <main className="flex-1 p-6 space-y-6">
+    <div>
+      <main className="flex-1 p-6 space-y-6">
        <div className="flex items-center justify-end gap-4">
             <IssueCertificateDialog onCertificateCreated={fetchCertificates} />
             <VerifyCertificateDialog>
@@ -162,6 +158,8 @@ export function InstitutionDashboard() {
           </Table>
         </CardContent>
       </Card>
+      <Toaster />
     </main>
+    </div>
   );
 }
