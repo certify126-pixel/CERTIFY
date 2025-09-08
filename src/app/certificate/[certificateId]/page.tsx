@@ -3,15 +3,27 @@
 
 import { CertificateTemplate } from '@/components/certificate-template';
 import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
-import type { CertificateDocument } from '@/ai/flows/in-memory-db';
 import React, { useEffect, useState } from 'react';
 import { Loader2, Printer } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
+// Define a serializable certificate type for the client-side state
+type SerializableCertificate = {
+    _id: string;
+    studentName: string;
+    course: string;
+    issueDate: string;
+    institution: string;
+    certificateId: string;
+    certificateHash: string;
+    createdAt: string;
+    status: string;
+};
+
 export default function CertificatePage() {
     const params = useParams();
-    const [certificate, setCertificate] = useState<CertificateDocument | null>(null);
+    const [certificate, setCertificate] = useState<SerializableCertificate | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +41,7 @@ export default function CertificatePage() {
             try {
                 const result = await getCertificateById({ certificateId });
                 if (result.success && result.certificate) {
-                    setCertificate(result.certificate as CertificateDocument);
+                    setCertificate(result.certificate as SerializableCertificate);
                 } else {
                     setError(result.message || "Certificate not found.");
                 }

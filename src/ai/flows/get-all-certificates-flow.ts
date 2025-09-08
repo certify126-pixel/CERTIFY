@@ -2,18 +2,32 @@
 'use server';
 
 /**
- * @fileOverview A flow for fetching all certificates.
+ * @fileOverview A flow for fetching all certificates from Firestore.
  *
- * - getAllCertificates - Fetches all certificates from the in-memory store.
+ * - getAllCertificates - Fetches all certificates from the Firestore collection.
  * - GetAllCertificatesOutput - The return type for the getAllCertificates function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { certificates, CertificateDocumentSchema } from './in-memory-db';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
 
-// The output schema now expects `createdAt` to be a string.
-const GetAllCertificatesOutputSchema = z.array(CertificateDocumentSchema);
+// Base schema for a certificate, used for array output
+const CertificateSchema = z.object({
+    _id: z.string(),
+    studentName: z.string(),
+    rollNumber: z.string(),
+    certificateId: z.string(),
+    issueDate: z.string(),
+    course: z.string(),
+    institution: z.string(),
+    certificateHash: z.string(),
+    status: z.string(),
+    createdAt: z.string(),
+});
+
+const GetAllCertificatesOutputSchema = z.array(CertificateSchema);
 export type GetAllCertificatesOutput = z.infer<typeof GetAllCertificatesOutputSchema>;
 
 export async function getAllCertificates(): Promise<GetAllCertificatesOutput> {
@@ -27,10 +41,34 @@ const getAllCertificatesFlow = ai.defineFlow(
     outputSchema: GetAllCertificatesOutputSchema,
   },
   async () => {
-    // Return a serializable copy of the certificates array by converting Date objects to ISO strings.
-    return certificates.map(cert => ({
-        ...cert,
-        createdAt: cert.createdAt.toISOString(),
-    }));
+    try {
+      const certificatesRef = collection(db, 'certificates');
+      const q = query(certificatesRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      const certificates = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          _id: doc.id,
+          studentName: data.studentName,
+          rollNumber: data.rollNumber,
+          certificateId: data.certificateId,
+          issueDate: data.issueDate,
+          course: data.course,
+          institution: data.institution,
+          certificateHash: data.certificateHash,
+          status: data.status,
+          // Convert Firestore Timestamp to ISO string for serializability
+          createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+        };
+      });
+      
+      return certificates;
+
+    } catch (error) {
+      console.error("Error fetching all certificates:", error);
+      // Return an empty array or throw an error, depending on desired error handling
+      return [];
+    }
   }
 );

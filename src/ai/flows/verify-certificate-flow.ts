@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for verifying an academic certificate using its cryptographic hash.
+ * @fileOverview A flow for verifying an academic certificate using its cryptographic hash against Firestore.
  *
  * - verifyCertificate - A function that handles the certificate verification process.
  * - VerifyCertificateInput - The input type for the verifyCertificate function.
@@ -12,7 +12,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import { certificates } from './in-memory-db';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
 
 const VerifyCertificateInputSchema = z.object({
   rollNumber: z.string().describe("The student's roll number or ID."),
@@ -50,9 +52,13 @@ const verifyCertificateFlow = ai.defineFlow(
     hash.update(rollNumber + certificateId + issueDate);
     const certificateHash = hash.digest('hex');
 
-    const certificateRecord = certificates.find(c => c.certificateHash === certificateHash);
+    const certificatesRef = collection(db, "certificates");
+    const q = query(certificatesRef, where("certificateHash", "==", certificateHash));
+    const querySnapshot = await getDocs(q);
 
-    if (certificateRecord) {
+    if (!querySnapshot.empty) {
+      const certificateRecord = querySnapshot.docs[0].data();
+
       if (
         certificateRecord.rollNumber === rollNumber &&
         certificateRecord.certificateId === certificateId &&

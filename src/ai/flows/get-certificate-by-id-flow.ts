@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for fetching a single certificate by its unique ID.
+ * @fileOverview A flow for fetching a single certificate by its unique ID from Firestore.
  *
  * - getCertificateById - A function that fetches a certificate by its ID.
  * - GetCertificateByIdInput - The input type for the getCertificateById function.
@@ -11,7 +11,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { certificates, type CertificateDocument } from './in-memory-db';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
 
 const GetCertificateByIdInputSchema = z.object({
@@ -39,14 +40,19 @@ const getCertificateByIdFlow = ai.defineFlow(
   },
   async ({ certificateId }) => {
     try {
-      const certificateRecord = certificates.find(c => c.certificateId === certificateId);
+      const certificatesRef = collection(db, 'certificates');
+      const q = query(certificatesRef, where('certificateId', '==', certificateId));
+      const querySnapshot = await getDocs(q);
 
-      if (certificateRecord) {
+      if (!querySnapshot.empty) {
+        const certificateDoc = querySnapshot.docs[0];
+        const certificateData = certificateDoc.data();
+
         // Create a serializable copy of the object
         const serializableCertificate = {
-          ...certificateRecord,
-          _id: certificateRecord._id.toString(),
-          createdAt: certificateRecord.createdAt.toISOString(),
+          ...certificateData,
+          _id: certificateDoc.id,
+          createdAt: (certificateData.createdAt as Timestamp).toDate().toISOString(),
         };
 
         return {

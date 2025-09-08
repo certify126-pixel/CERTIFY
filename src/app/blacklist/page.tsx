@@ -3,7 +3,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ShieldX } from "lucide-react";
-import { blacklist } from "@/ai/flows/in-memory-db";
+// In a real app, this data would be fetched from Firestore.
+const blacklist = [
+    { id: '1', certificateId: 'FAKE-123', rollNumber: 'CS-9999', reason: 'Invalid hash and details mismatch.', date: '2024-07-23' },
+    { id: '2', certificateId: 'FORGED-456', rollNumber: 'EE-0000', reason: 'Record not found in university database.', date: '2024-07-22' },
+];
 
 export default function BlacklistPage() {
   return (

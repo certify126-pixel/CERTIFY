@@ -10,4 +10,3 @@ import '@/ai/flows/register-user-flow.ts';
 import '@/ai/flows/login-user-flow.ts';
 import '@/ai/flows/get-certificate-by-id-flow.ts';
 import '@/ai/flows/get-all-certificates-flow.ts';
-import '@/ai/flows/in-memory-db.ts';
