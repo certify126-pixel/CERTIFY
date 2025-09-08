@@ -3,10 +3,13 @@
 
 import { CertificateTemplate } from '@/components/certificate-template';
 import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
-import React, { useEffect, useState } from 'react';
-import { Loader2, Printer } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Loader2, Printer, Download } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 
 // Define a serializable certificate type for the client-side state
 type SerializableCertificate = {
@@ -25,7 +28,10 @@ export default function CertificatePage() {
     const params = useParams();
     const [certificate, setCertificate] = useState<SerializableCertificate | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const certificateRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         const certificateId = params.certificateId as string;
@@ -55,8 +61,55 @@ export default function CertificatePage() {
         fetchCertificate();
     }, [params.certificateId]);
 
-    const handlePrint = () => {
-        window.print();
+    const handleDownload = async (format: 'pdf' | 'png') => {
+        if (!certificateRef.current || isDownloading) return;
+
+        setIsDownloading(true);
+        try {
+            // Temporarily increase scale for better quality
+            const canvas = await html2canvas(certificateRef.current, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: null, 
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = `Q-Certify-${certificate?.certificateId || 'certificate'}.png`;
+                link.href = imgData;
+                link.click();
+            } else {
+                // Dimensions for A4 landscape
+                const pdf = new jsPDF('l', 'mm', 'a4'); 
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const canvasAspectRatio = canvasWidth / canvasHeight;
+                
+                let finalWidth = pdfWidth;
+                let finalHeight = pdfWidth / canvasAspectRatio;
+
+                if (finalHeight > pdfHeight) {
+                    finalHeight = pdfHeight;
+                    finalWidth = pdfHeight * canvasAspectRatio;
+                }
+                
+                const xOffset = (pdfWidth - finalWidth) / 2;
+                const yOffset = (pdfHeight - finalHeight) / 2;
+                
+                pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+                pdf.save(`Q-Certify-${certificate?.certificateId || 'certificate'}.pdf`);
+            }
+        } catch (e) {
+            console.error("Error generating file:", e);
+            setError("Failed to generate the downloadable file.");
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     if (loading) {
@@ -103,13 +156,19 @@ export default function CertificatePage() {
 
     return (
         <div className="bg-gray-200 certificate-page-body">
-             <div className="p-4 text-center print-hide">
-                <Button onClick={handlePrint}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print / Save as PDF
+             <div className="p-4 text-center print-hide space-x-4">
+                <Button onClick={() => handleDownload('pdf')} disabled={isDownloading}>
+                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    Download PDF
+                </Button>
+                 <Button onClick={() => handleDownload('png')} disabled={isDownloading} variant="outline">
+                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    Download PNG
                 </Button>
             </div>
-            <CertificateTemplate certificate={templateProps} />
+            <div ref={certificateRef}>
+                <CertificateTemplate certificate={templateProps} />
+            </div>
         </div>
     );
 }
