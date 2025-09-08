@@ -22,12 +22,10 @@ import { addCertificate } from "@/ai/flows/add-certificate-flow";
 const formSchema = z.object({
   studentName: z.string()
     .min(2, "Name must be at least 2 characters")
-    .max(50, "Name cannot exceed 50 characters")
     .regex(/^[a-zA-Z\s]+$/, "Only letters and spaces allowed"),
   rollNumber: z.string()
-    .min(3, "Roll number must be at least 3 digits")
-    .max(10, "Roll number cannot exceed 10 digits")
-    .regex(/^\d+$/, "Only numbers allowed"),
+    .min(1, "Roll number is required")
+    .regex(/^\d+$/, "Roll number must contain only numbers"),
   certificateId: z.string()
     .min(6, "Certificate ID must be at least 6 digits")
     .regex(/^\d+$/, "Only numbers allowed"),
@@ -61,18 +59,29 @@ export function IssueCertificateDialog({ onCertificateCreated }: IssueCertificat
     const onSubmit = async (data: FormValues) => {
       setIsSubmitting(true);
       try {
-        const result = await addCertificate(data);
-        if (result.success) {
-          toast.success("Certificate issued successfully", {
-            description: `Certificate for ${data.studentName} has been created.`
+        const result = await addCertificate({
+          studentName: data.studentName,
+          rollNumber: data.rollNumber,
+          certificateId: data.certificateId,
+          course: data.course,
+          issueDate: data.issueDate,
+          institution: data.institution || "Jawaharlal Nehru University"
+        });
+
+        if (result.success && result.certificate) {
+          toast.success("Certificate Created", {
+            description: `Certificate for ${result.certificate.studentName} has been created with hash: ${result.certificate.certificateHash}`
           });
+          setOpen(false);
           form.reset();
-          handleClose();
+          if (onCertificateCreated) {
+            onCertificateCreated();
+          }
         } else {
-          throw new Error(result.message || "Failed to issue certificate");
+          throw new Error(result.message || "Failed to create certificate");
         }
       } catch (error) {
-        toast.error("Failed to issue certificate", {
+        toast.error("Creation Failed", {
           description: error instanceof Error ? error.message : "An unexpected error occurred"
         });
       } finally {
@@ -135,11 +144,20 @@ export function IssueCertificateDialog({ onCertificateCreated }: IssueCertificat
                           <FormControl>
                             <Input
                               {...field}
+                              type="text"
+                              placeholder="Enter roll number (numbers only)"
                               disabled={isSubmitting}
-                              placeholder="Enter roll number"
                               onKeyPress={(e) => {
+                                // Allow only numbers
                                 if (!/\d/.test(e.key)) {
                                   e.preventDefault();
+                                }
+                              }}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Only update if the value contains only numbers or is empty
+                                if (value === '' || /^\d+$/.test(value)) {
+                                  field.onChange(value);
                                 }
                               }}
                             />

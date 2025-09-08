@@ -1,87 +1,83 @@
 'use server';
 
-/**
- * @fileOverview A flow for fetching a single certificate by its unique ID from the in-memory database.
- *
- * - getCertificateById - A function that fetches a certificate by its ID.
- * - GetCertificateByIdInput - The input type for the getCertificateById function.
- * - GetCertificateByIdOutput - The return type for the getCertificateById function.
- */
+import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { db } from '@/lib/in-memory-db';
-import { prisma } from "@/lib/prisma";
-import { toast } from "sonner";
-
+// Input validation schema
 const GetCertificateByIdInputSchema = z.object({
-  certificateId: z.string().describe("The unique ID of the certificate to fetch."),
+  certificateId: z.string()
+    .min(1, "Certificate ID is required")
+    .regex(/^\d+$/, "Certificate ID must contain only numbers"),
+  rollNumber: z.string()
+    .regex(/^[A-Z]{2,3}-\d+$/, "Invalid roll number format"),
+  issueDate: z.string()
+    .min(1, "Issue date is required")
 });
-export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 
+// Output schema for better type safety
 const GetCertificateByIdOutputSchema = z.object({
-    _id: z.string(),
+  success: z.boolean(),
+  message: z.string().optional(),
+  certificate: z.object({
+    id: z.string(),
+    certificateId: z.string(),
     studentName: z.string(),
     rollNumber: z.string(),
-    certificateId: z.string(),
     issueDate: z.string(),
-    course: z.string(),
-    institution: z.string(),
     certificateHash: z.string(),
-    status: z.string(),
-    createdAt: z.string(),
-}).nullable().describe("The certificate data if found, or null if not found.");
+    course: z.string(),
+    institution: z.string()
+  }).optional()
+});
+
+export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 export type GetCertificateByIdOutput = z.infer<typeof GetCertificateByIdOutputSchema>;
 
 export async function getCertificateById(input: GetCertificateByIdInput): Promise<GetCertificateByIdOutput> {
-  return getCertificateByIdFlow(input);
-}
-
-const getCertificateByIdFlow = ai.defineFlow(
-  {
-    name: 'getCertificateByIdFlow',
-    inputSchema: GetCertificateByIdInputSchema,
-    outputSchema: GetCertificateByIdOutputSchema,
-  },
-  async ({ certificateId }) => {
-    try {
-      // Correctly find the certificate by its public certificateId
-      const certificate = db.certificates.find(c => c.certificateId === certificateId);
-
-      if (certificate) {
-        return certificate;
-      } else {
-        console.warn(`Certificate not found with ID: ${certificateId}`);
-        return null;
-      }
-    } catch (error: any) {
-        console.error("Error fetching certificate by ID:", error);
-        return null;
-    }
-  }
-);
-
-export async function getCertificateById(certificateId: string) {
   try {
-    const certificate = await prisma.certificate.findUnique({
+    // Validate input
+    const validatedInput = GetCertificateByIdInputSchema.parse(input);
+
+    // Search for certificate
+    const certificate = await prisma.certificate.findFirst({
       where: {
-        certificateId: certificateId,
-      },
+        AND: [
+          { certificateId: validatedInput.certificateId },
+          { rollNumber: validatedInput.rollNumber },
+          { issueDate: new Date(validatedInput.issueDate) }
+        ]
+      }
     });
 
     if (!certificate) {
-      toast.error(`Certificate not found`, {
-        description: `No certificate exists with ID: ${certificateId}`
-      });
-      return null;
+      return {
+        success: false,
+        message: `Certificate not found with ID: ${validatedInput.certificateId}`
+      };
     }
 
-    return certificate;
+    // Format dates for output
+    const formattedCertificate = {
+      ...certificate,
+      issueDate: certificate.issueDate.toISOString().split('T')[0]
+    };
+
+    return {
+      success: true,
+      certificate: formattedCertificate
+    };
   } catch (error) {
-    console.error("Error fetching certificate:", error);
-    toast.error("Failed to fetch certificate", {
-      description: "There was an error retrieving the certificate details."
-    });
-    return null;
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: `Validation error: ${error.errors.map(e => e.message).join(', ')}`
+      };
+    }
+
+    console.error('Error fetching certificate:', error);
+    return {
+      success: false,
+      message: 'An error occurred while fetching the certificate'
+    };
   }
 }

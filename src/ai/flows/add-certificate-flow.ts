@@ -1,136 +1,128 @@
 'use server';
 
-/**
- * @fileOverview A flow for adding new certificate data to the in-memory database.
- *
- * - addCertificate - A function that handles adding a new certificate.
- * - AddCertificateInput - The input type for the addCertificate function.
- * - AddCertificateOutput - The return type for the addCertificate function.
- */
-
-import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-import { createHash } from 'crypto';
-import { db } from '@/lib/in-memory-db';
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
 const AddCertificateInputSchema = z.object({
-  studentName: z.string().describe("The full name of the student."),
-  rollNumber: z.string().describe("The student's roll number or ID."),
-  certificateId: z.string().describe("The unique ID of the certificate."),
-  issueDate: z.string().describe("The date the certificate was issued (YYYY-MM-DD)."),
-  course: z.string().describe("The course or degree obtained."),
-  institution: z.string().describe("The name of the issuing institution."),
-});
-export type AddCertificateInput = z.infer<typeof AddCertificateInputSchema>;
-
-const AddCertificateOutputSchema = z.object({
-  success: z.boolean().describe("Whether the certificate was added successfully."),
-  certificateHash: z.string().describe("The SHA-256 hash of the certificate data."),
-  message: z.string().describe("A message indicating the result of the operation."),
-  certificate: z.object({
-    _id: z.string(),
-    studentName: z.string(),
-    rollNumber: z.string(),
-    certificateId: z.string(),
-    issueDate: z.string(),
-    course: z.string(),
-    institution: z.string(),
-    certificateHash: z.string(),
-    status: z.string(),
-    createdAt: z.string(),
-  })
-});
-export type AddCertificateOutput = z.infer<typeof AddCertificateOutputSchema>;
-
-const certificateSchema = z.object({
-  recipientName: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name cannot exceed 50 characters')
-    .regex(/^[a-zA-Z\s]+$/, 'Name must contain only letters and spaces'),
-    
+  studentName: z.string()
+    .min(2, "Student name must be at least 2 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Student name must contain only letters and spaces"),
+  rollNumber: z.string()
+    .min(1, "Roll number is required")
+    .regex(/^\d+$/, "Roll number must contain only numbers"),
   certificateId: z.string()
-    .regex(/^[A-Z0-9-]{8,}$/, 'Invalid certificate ID format'),
-    
-  issuerName: z.string()
-    .min(2, 'Issuer name must be at least 2 characters')
-    .max(50, 'Issuer name cannot exceed 50 characters')
-    .regex(/^[a-zA-Z\s]+$/, 'Issuer name must contain only letters and spaces'),
-    
-  description: z.string()
-    .min(10, 'Description must be at least 10 characters')
-    .max(500, 'Description cannot exceed 500 characters')
-    .regex(/^[a-zA-Z0-9\s.,!?-]+$/, 'Description contains invalid characters'),
-    
-  issueDate: z.date(),
-  expiryDate: z.date().optional(),
-  certificateType: z.enum(['academic', 'professional', 'achievement'])
+    .min(6, "Certificate ID must be at least 6 digits")
+    .regex(/^\d+$/, "Certificate ID must contain only numbers"),
+  course: z.string().min(1, "Course is required"),
+  issueDate: z.string().min(1, "Issue date is required"),
+  institution: z.string().min(1, "Institution is required")
 });
 
-export async function addCertificate(input: AddCertificateInput): Promise<AddCertificateOutput> {
-  return addCertificateAiFlow(input);
+export type AddCertificateInput = z.infer<typeof AddCertificateInputSchema>;
+export type AddCertificateOutput = {
+  success: boolean;
+  message?: string;
+  certificate?: {
+    id: string;
+    certificateId: string;
+    studentName: string;
+    rollNumber: string;
+    issueDate: string;
+    certificateHash: string;
+    course: string;
+    institution: string;
+  };
+};
+
+function generateCertificateHash(data: AddCertificateInput): string {
+  const stringToHash = `${data.studentName}-${data.rollNumber}-${data.certificateId}-${data.course}-${data.issueDate}-${data.institution}`;
+  return crypto.createHash('sha256').update(stringToHash).digest('hex');
 }
 
-const addCertificateAiFlow = ai.defineFlow(
-  {
-    name: 'addCertificateFlow',
-    inputSchema: AddCertificateInputSchema,
-    outputSchema: AddCertificateOutputSchema,
-  },
-  async (input) => {
-    const { studentName, rollNumber, certificateId, issueDate, course, institution } = input;
-
-    // Create a unique cryptographic hash for the certificate data.
-    const hash = createHash('sha256');
-    hash.update(rollNumber + certificateId + issueDate);
-    const certificateHash = hash.digest('hex');
-
-    const newCertificate = {
-        _id: `cert_${Date.now()}`,
-        studentName,
-        rollNumber,
-        certificateId,
-        issueDate,
-        course,
-        institution,
-        certificateHash,
-        status: 'Issued',
-        createdAt: new Date().toISOString(),
-    };
-
-    try {
-        db.certificates.push(newCertificate);
-        console.log(`Stored certificate for ${input.studentName}. ID: ${newCertificate._id}`);
-
-        return {
-          success: true,
-          certificateHash: newCertificate.certificateHash,
-          message: 'Certificate data has been successfully stored.',
-          certificate: newCertificate,
-        };
-    } catch (error: any) {
-        console.error("Error adding certificate:", error);
-        throw new Error("Failed to store certificate data.");
-    }
-  }
-);
-
-export async function addCertificateFlow(data: unknown) {
+export async function addCertificate(input: AddCertificateInput): Promise<AddCertificateOutput> {
   try {
-    const validatedData = certificateSchema.parse(data);
-    // Sanitize the data
+    // Validate input
+    const validatedData = AddCertificateInputSchema.parse(input);
+
+    // Sanitize data
     const sanitizedData = {
       ...validatedData,
-      recipientName: validatedData.recipientName.trim(),
-      issuerName: validatedData.issuerName.trim(),
-      description: validatedData.description.trim()
+      studentName: validatedData.studentName.trim(),
+      rollNumber: validatedData.rollNumber.trim().toUpperCase(),
+      certificateId: validatedData.certificateId.trim()
     };
-    
-    return sanitizedData;
-    
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`);
+
+    // Generate certificate hash
+    const certificateHash = generateCertificateHash(sanitizedData);
+
+    // Check if certificate already exists
+    const existingCertificate = await prisma.certificate.findFirst({
+      where: {
+        OR: [
+          { certificateId: sanitizedData.certificateId },
+          { certificateHash }
+        ]
+      }
+    });
+
+    if (existingCertificate) {
+      return {
+        success: false,
+        message: "Certificate with this ID or details already exists"
+      };
     }
-    throw error;
+
+    // Create new certificate
+    const certificate = await prisma.certificate.create({
+      data: {
+        ...sanitizedData,
+        certificateHash,
+        issueDate: new Date(sanitizedData.issueDate)
+      }
+    });
+
+    // Format the date for response
+    const formattedCertificate = {
+      ...certificate,
+      issueDate: certificate.issueDate.toISOString().split('T')[0]
+    };
+
+    return {
+      success: true,
+      certificate: formattedCertificate
+    };
+
+  } catch (error) {
+    console.error("Error creating certificate:", error);
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: `Validation error: ${error.errors.map(e => e.message).join(', ')}`
+      };
+    }
+
+    // Handle Prisma errors
+    if (error instanceof Error) {
+      if (error.message.includes('Connection refused')) {
+        return {
+          success: false,
+          message: "Database connection failed. Please ensure the database is running."
+        };
+      }
+      if (error.message.includes('Unique constraint')) {
+        return {
+          success: false,
+          message: "A certificate with this ID already exists."
+        };
+      }
+    }
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to create certificate"
+    };
   }
 }
