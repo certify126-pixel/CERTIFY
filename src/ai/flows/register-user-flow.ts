@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,10 +11,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { createHash } from 'crypto';
-
-// In-memory store for users
-const users: any[] = [];
+import { createHash, randomUUID } from 'crypto';
+import { users } from './in-memory-db';
 
 const RegisterUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),
@@ -60,7 +59,7 @@ const registerUserFlow = ai.defineFlow(
 
     // Create the new user document
     const newUser = {
-      _id: crypto.randomUUID(),
+      _id: randomUUID(),
       email,
       password: hashedPassword,
       role,

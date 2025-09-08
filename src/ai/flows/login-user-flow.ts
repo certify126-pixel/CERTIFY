@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,9 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-
-// In-memory store for users
-const users: any[] = [];
+import { users } from './in-memory-db';
 
 const LoginUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),

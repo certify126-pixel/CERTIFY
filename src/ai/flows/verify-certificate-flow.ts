@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,22 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-
-// In-memory store for certificates
-const certificates: any[] = [
-    {
-        _id: '1',
-        studentName: 'Rohan Kumar',
-        rollNumber: 'CS-123',
-        certificateId: 'JHU-84321-2023',
-        issueDate: '2023-05-20',
-        course: 'B.Tech in Computer Science',
-        institution: 'Jawaharlal Nehru University',
-        certificateHash: createHash('sha256').update('CS-123JHU-84321-20232023-05-20').digest('hex'),
-        status: 'Issued',
-        createdAt: new Date(),
-    }
-];
+import { certificates } from './in-memory-db';
 
 const VerifyCertificateInputSchema = z.object({
   rollNumber: z.string().describe("The student's roll number or ID."),

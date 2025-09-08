@@ -1,3 +1,4 @@
+
 // add-certificate-flow.ts
 'use server';
 
@@ -12,9 +13,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash, randomUUID } from 'crypto';
-
-// In-memory store for certificates
-const certificates: any[] = [];
+import { certificates } from './in-memory-db';
 
 const AddCertificateInputSchema = z.object({
   studentName: z.string().describe("The full name of the student."),
