@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Database, FilePenLine, PlusCircle, Trash2, Eye, Loader2 } from "lucide-react";
+import { Database, FilePenLine, Trash2, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getAllCertificates, GetAllCertificatesOutput } from "@/ai/flows/get-all-certificates-flow";
 import { deleteCertificate } from "@/ai/flows/delete-certificate-flow";
@@ -20,7 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { IssueCertificateDialog } from "@/components/issue-certificate-dialog";
 
 export default function ManageCertificatesPage() {
   const [certificates, setCertificates] = useState<GetAllCertificatesOutput>([]);
@@ -84,10 +85,7 @@ export default function ManageCertificatesPage() {
                     View, edit, or revoke certificates issued by your institution.
                 </CardDescription>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4"/>
-                Issue New Certificate
-            </Button>
+            <IssueCertificateDialog onCertificateCreated={fetchCertificates} />
         </CardHeader>
         <CardContent>
             <Table>
