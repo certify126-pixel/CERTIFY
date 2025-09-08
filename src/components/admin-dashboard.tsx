@@ -22,6 +22,7 @@ import {
   Bot,
   Building,
   CheckCircle2,
+  FileCheck,
   FileClock,
   FileText,
   FileX2,
@@ -39,7 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { VerificationHistoryItem } from "./verify-certificate-dialog";
+import { VerificationHistoryItem, VerifyCertificateDialog } from "./verify-certificate-dialog";
 
 type VerificationLog = {
   id: string;
@@ -100,12 +101,14 @@ export function AdminDashboard() {
   const [blacklist, setBlacklist] = React.useState<BlacklistItem[]>([]);
 
   const handleAddToBlacklist = (item: VerificationHistoryItem, details: Record<string, string>) => {
-    setBlacklist(prev => [...prev, {
-        id: item.id,
-        reason: item.message,
-        certificateDetails: details,
-        timestamp: item.timestamp,
-    }]);
+    if (!item.verified) {
+      setBlacklist(prev => [...prev, {
+          id: item.id,
+          reason: item.message,
+          certificateDetails: details,
+          timestamp: item.timestamp,
+      }]);
+    }
   };
 
   const handleGenerateSummary = async () => {
@@ -120,6 +123,14 @@ export function AdminDashboard() {
 
   return (
     <main className="flex-1 p-6 space-y-6">
+       <div className="flex items-center justify-end gap-4">
+            <VerifyCertificateDialog onVerificationComplete={handleAddToBlacklist}>
+              <Button variant="outline">
+                <FileCheck className="mr-2 h-4 w-4" />
+                Verify Certificate
+              </Button>
+            </VerifyCertificateDialog>
+        </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="transition-transform duration-300 ease-in-out hover:-translate-y-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

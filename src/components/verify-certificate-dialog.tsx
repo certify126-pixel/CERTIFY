@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, FileCheck, Upload } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, FileCheck, Upload, File as FileIcon } from "lucide-react";
 import React from "react";
 import { verifyCertificate, VerifyCertificateOutput } from "@/ai/flows/verify-certificate-flow";
 import { verifyCertificateWithOcr } from "@/ai/flows/verify-certificate-with-ocr-flow";
@@ -44,7 +44,7 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
   const [certificateId, setCertificateId] = React.useState("");
   const [issueDate, setIssueDate] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
-  const [filePreview, setFilePreview] = React.useState<string | null>(null);
+  const [fileDataUri, setFileDataUri] = React.useState<string | null>(null);
 
 
   const resetForm = () => {
@@ -53,7 +53,7 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
     setIssueDate("");
     setVerificationResult(null);
     setFile(null);
-    setFilePreview(null);
+    setFileDataUri(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +62,7 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
         setFile(selectedFile);
         const reader = new FileReader();
         reader.onloadend = () => {
-            setFilePreview(reader.result as string);
+            setFileDataUri(reader.result as string);
         };
         reader.readAsDataURL(selectedFile);
     }
@@ -105,11 +105,11 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
 
   const handleSubmitOcr = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!filePreview) {
+    if (!fileDataUri) {
         toast({
             variant: "destructive",
             title: "No File Selected",
-            description: "Please upload a certificate image to verify.",
+            description: "Please upload a certificate document to verify.",
         });
         return;
     }
@@ -118,11 +118,9 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
 
     try {
         const result = await verifyCertificateWithOcr({
-            photoDataUri: filePreview,
+            photoDataUri: fileDataUri,
         });
         
-        // We don't have the exact extracted details here, so we pass a placeholder.
-        // A more robust solution might involve the OCR flow returning the extracted details.
         let submittedDetails = {
             certificateId: "From Document",
             rollNumber: "From Document",
@@ -198,12 +196,13 @@ export function VerifyCertificateDialog({ children, onVerificationComplete }: Ve
             <TabsContent value="ocr">
                 <form onSubmit={handleSubmitOcr}>
                     <div className="grid gap-4 py-6">
-                        <Label htmlFor="certificate-file">Upload Certificate Image</Label>
-                        <Input id="certificate-file" type="file" accept="image/*" onChange={handleFileChange} className="file:text-primary file:font-semibold"/>
-                        {filePreview && (
-                            <div className="p-2 border rounded-md">
-                                <img src={filePreview} alt="Certificate Preview" className="max-h-48 w-full object-contain"/>
-                            </div>
+                        <Label htmlFor="certificate-file">Upload Document</Label>
+                        <Input id="certificate-file" type="file" accept="image/*,application/pdf" onChange={handleFileChange} className="file:text-primary file:font-semibold"/>
+                        {file && (
+                           <div className="flex items-center gap-3 p-2 border rounded-md text-sm text-muted-foreground">
+                               <FileIcon className="h-5 w-5" />
+                               <span className="truncate">{file.name}</span>
+                           </div>
                         )}
                     </div>
                      <DialogFooter>
