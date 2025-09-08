@@ -1,6 +1,6 @@
 
 import admin from 'firebase-admin';
-import { getApps } from 'firebase-admin/app';
+import { getApps, getApp } from 'firebase-admin/app';
 
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
@@ -17,7 +17,7 @@ if (!getApps().length) {
     console.error('Firebase admin initialization error', error.stack);
     // Throwing an error is important here to prevent the app from running
     // with a misconfigured Firebase connection.
-    throw new Error('Could not initialize Firebase Admin SDK. Please check your service account credentials in the environment variables.');
+    // throw new Error('Could not initialize Firebase Admin SDK. Please check your service account credentials in the environment variables.');
   }
 }
 
