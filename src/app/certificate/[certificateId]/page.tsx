@@ -22,12 +22,13 @@ export default function CertificatePage({ params }: { params: { certificateId: s
     const [certificate, setCertificate] = useState<CertificateData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { certificateId } = params;
 
     useEffect(() => {
         const fetchCertificate = async () => {
             setLoading(true);
             try {
-                const result = await getCertificateById({ certificateId: params.certificateId });
+                const result = await getCertificateById({ certificateId: certificateId });
                 if (result.success && result.certificate) {
                     // The flow returns an object, we need to cast it.
                     // A more robust solution might use a Zod schema on the client too.
@@ -42,10 +43,10 @@ export default function CertificatePage({ params }: { params: { certificateId: s
             }
         };
 
-        if (params.certificateId) {
+        if (certificateId) {
             fetchCertificate();
         }
-    }, [params.certificateId]);
+    }, [certificateId]);
 
     if (loading) {
         return (
