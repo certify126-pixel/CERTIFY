@@ -1,9 +1,8 @@
-
 // add-certificate-flow.ts
 'use server';
 
 /**
- * @fileOverview A flow for adding new certificate data from a secure endpoint.
+ * @fileOverview A flow for adding new certificate data.
  *
  * - addCertificate - A function that handles adding a new certificate.
  * - AddCertificateInput - The input type for the addCertificate function.
@@ -13,7 +12,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import clientPromise from '@/lib/mongodb';
+
+// In-memory store for certificates
+const certificates: any[] = [];
 
 const AddCertificateInputSchema = z.object({
   studentName: z.string().describe("The full name of the student."),
@@ -50,11 +51,8 @@ const addCertificateFlow = ai.defineFlow(
     hash.update(rollNumber + certificateId + issueDate);
     const certificateHash = hash.digest('hex');
 
-    const client = await clientPromise;
-    const db = client.db();
-    const certificatesCollection = db.collection('certificates');
-
     const newCertificate = {
+        _id: crypto.randomUUID(),
         studentName,
         rollNumber,
         certificateId,
@@ -66,15 +64,14 @@ const addCertificateFlow = ai.defineFlow(
         createdAt: new Date(),
     };
 
-    await certificatesCollection.insertOne(newCertificate);
+    certificates.push(newCertificate);
 
     console.log(`Stored certificate for ${input.studentName}. Hash: ${certificateHash}`);
 
     return {
       success: true,
       certificateHash,
-      message: 'Certificate data has been successfully stored in the database.',
+      message: 'Certificate data has been successfully stored.',
     };
   }
 );
-

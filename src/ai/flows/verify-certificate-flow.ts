@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,7 +11,22 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import clientPromise from '@/lib/mongodb';
+
+// In-memory store for certificates
+const certificates: any[] = [
+    {
+        _id: '1',
+        studentName: 'Rohan Kumar',
+        rollNumber: 'CS-123',
+        certificateId: 'JHU-84321-2023',
+        issueDate: '2023-05-20',
+        course: 'B.Tech in Computer Science',
+        institution: 'Jawaharlal Nehru University',
+        certificateHash: createHash('sha256').update('CS-123JHU-84321-20232023-05-20').digest('hex'),
+        status: 'Issued',
+        createdAt: new Date(),
+    }
+];
 
 const VerifyCertificateInputSchema = z.object({
   rollNumber: z.string().describe("The student's roll number or ID."),
@@ -50,11 +64,7 @@ const verifyCertificateFlow = ai.defineFlow(
     hash.update(rollNumber + certificateId + issueDate);
     const certificateHash = hash.digest('hex');
 
-    const client = await clientPromise;
-    const db = client.db();
-    const certificatesCollection = db.collection('certificates');
-    
-    const certificateRecord = await certificatesCollection.findOne({ certificateHash });
+    const certificateRecord = certificates.find(c => c.certificateHash === certificateHash);
 
     if (certificateRecord) {
       if (

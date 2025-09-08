@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,7 +11,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import clientPromise from '@/lib/mongodb';
+
+// In-memory store for users
+const users: any[] = [];
 
 const RegisterUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),
@@ -45,12 +46,8 @@ const registerUserFlow = ai.defineFlow(
     outputSchema: RegisterUserOutputSchema,
   },
   async ({ email, password, role }) => {
-    const client = await clientPromise;
-    const db = client.db();
-    const usersCollection = db.collection('users');
-
     // Check if user already exists
-    const existingUser = await usersCollection.findOne({ email });
+    const existingUser = users.find(u => u.email === email);
     if (existingUser) {
       return {
         success: false,
@@ -63,13 +60,14 @@ const registerUserFlow = ai.defineFlow(
 
     // Create the new user document
     const newUser = {
+      _id: crypto.randomUUID(),
       email,
       password: hashedPassword,
       role,
       createdAt: new Date(),
     };
 
-    await usersCollection.insertOne(newUser);
+    users.push(newUser);
 
     return {
       success: true,

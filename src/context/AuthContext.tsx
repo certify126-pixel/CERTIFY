@@ -1,9 +1,7 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
-import clientPromise from "@/lib/mongodb";
 import { loginUser, LoginUserInput } from "@/ai/flows/login-user-flow";
 import { registerUser, RegisterUserInput } from "@/ai/flows/register-user-flow";
 

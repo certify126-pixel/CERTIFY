@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -11,8 +10,22 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import clientPromise from '@/lib/mongodb';
-import { WithId, Document } from 'mongodb';
+
+// In-memory store for certificates - assuming it's populated elsewhere for this example.
+const certificates: CertificateDocument[] = [
+    {
+        _id: '1',
+        studentName: 'Rohan Kumar',
+        rollNumber: 'CS-123',
+        certificateId: 'JHU-84321-2023',
+        issueDate: '2023-05-20',
+        course: 'B.Tech in Computer Science',
+        institution: 'Jawaharlal Nehru University',
+        certificateHash: 'hash123',
+        status: 'Issued',
+        createdAt: new Date().toISOString(),
+    }
+];
 
 
 const GetCertificateByIdInputSchema = z.object({
@@ -20,9 +33,7 @@ const GetCertificateByIdInputSchema = z.object({
 });
 export type GetCertificateByIdInput = z.infer<typeof GetCertificateByIdInputSchema>;
 
-// Define a TypeScript interface for the output certificate for type safety
-// without strict Zod validation on the output shape from the DB.
-export interface CertificateDocument extends Document {
+export interface CertificateDocument {
     _id: string;
     studentName: string;
     rollNumber: string;
@@ -55,25 +66,13 @@ const getCertificateByIdFlow = ai.defineFlow(
   },
   async ({ certificateId }) => {
     try {
-      const client = await clientPromise;
-      const db = client.db();
-      const certificatesCollection = db.collection('certificates');
-      
-      const certificateRecord = await certificatesCollection.findOne({ certificateId });
+      const certificateRecord = certificates.find(c => c.certificateId === certificateId);
 
       if (certificateRecord) {
-        // The _id is an ObjectId and createdAt is a Date, which can't be directly serialized 
-        // in Next.js server actions. We must convert them to strings.
-        const serializableRecord = {
-          ...certificateRecord,
-          _id: certificateRecord._id.toString(),
-          createdAt: certificateRecord.createdAt.toISOString(),
-        };
-
         return {
           success: true,
           message: 'Certificate found.',
-          certificate: serializableRecord,
+          certificate: certificateRecord,
         };
       } else {
         return {

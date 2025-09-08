@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,7 +11,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createHash } from 'crypto';
-import clientPromise from '@/lib/mongodb';
+
+// In-memory store for users
+const users: any[] = [];
 
 const LoginUserInputSchema = z.object({
   email: z.string().email().describe("The user's email address."),
@@ -62,11 +63,7 @@ const loginUserFlow = ai.defineFlow(
         };
     }
       
-    const client = await clientPromise;
-    const db = client.db();
-    const usersCollection = db.collection('users');
-
-    const user = await usersCollection.findOne({ email });
+    const user = users.find(u => u.email === email);
 
     if (!user) {
       return {
