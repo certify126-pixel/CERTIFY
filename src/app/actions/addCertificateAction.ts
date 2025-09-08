@@ -2,8 +2,28 @@
 'use server';
 
 import { createHash } from 'crypto';
-import { adminDb } from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
+import { getApps } from 'firebase-admin/app';
 import { FieldValue } from 'firebase-admin/firestore';
+
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+};
+
+if (!getApps().length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+        });
+    } catch (error: any) {
+        console.error('Firebase admin initialization error', error.stack);
+    }
+}
+
+const adminDb = admin.firestore();
+
 
 export async function addCertificateAction(formData: FormData) {
     const studentName = formData.get('studentName') as string;
@@ -46,6 +66,6 @@ export async function addCertificateAction(formData: FormData) {
 
     } catch (error: any) {
         console.error("Error adding certificate to Firestore:", error);
-        return { success: false, message: "Failed to store certificate data. An internal error occurred." };
+        return { success: false, message: error.message || "Failed to store certificate data. An internal error occurred." };
     }
 }
