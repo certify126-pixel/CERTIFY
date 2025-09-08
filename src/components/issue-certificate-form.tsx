@@ -53,13 +53,13 @@ export function IssueCertificateForm({ onFinished }: IssueCertificateFormProps) 
     try {
         const result: AddCertificateOutput = await addCertificate(certificateData);
 
-        if (result.success && result.certificateHash) {
+        if (result.success && result.certificate) {
             toast({
                 title: "Certificate Created",
-                description: `Certificate for ${certificateData.studentName} has been successfully created and stored.`,
+                description: `Certificate for ${result.certificate.studentName} has been successfully created and stored.`,
             });
             setCreationResult({ 
-                hash: result.certificateHash, 
+                hash: result.certificate.certificateHash, 
                 name: result.certificate.studentName,
                 certificateId: result.certificate.certificateId,
             });
