@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 // In-memory store for certificates
 const certificates: any[] = [];
@@ -52,7 +52,7 @@ const addCertificateFlow = ai.defineFlow(
     const certificateHash = hash.digest('hex');
 
     const newCertificate = {
-        _id: crypto.randomUUID(),
+        _id: randomUUID(),
         studentName,
         rollNumber,
         certificateId,
