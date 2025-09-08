@@ -10,9 +10,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { certificates, type CertificateDocument } from './in-memory-db';
+import { certificates, CertificateDocumentSchema } from './in-memory-db';
 
-const GetAllCertificatesOutputSchema = z.array(z.custom<CertificateDocument>());
+const GetAllCertificatesOutputSchema = z.array(CertificateDocumentSchema);
 export type GetAllCertificatesOutput = z.infer<typeof GetAllCertificatesOutputSchema>;
 
 export async function getAllCertificates(): Promise<GetAllCertificatesOutput> {
@@ -26,12 +26,10 @@ const getAllCertificatesFlow = ai.defineFlow(
     outputSchema: GetAllCertificatesOutputSchema,
   },
   async () => {
-    // Return a serializable copy of the certificates array
+    // Return a serializable copy of the certificates array by converting Date objects to strings.
     return certificates.map(cert => ({
         ...cert,
-        _id: cert._id.toString(),
-        // Convert Date object to a string to prevent serialization errors
-        createdAt: cert.createdAt.toISOString() as any, 
+        createdAt: cert.createdAt.toISOString(),
     }));
   }
 );

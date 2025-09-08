@@ -1,5 +1,6 @@
 
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { z } from 'zod';
 
 /**
  * This file acts as a simple in-memory database for demonstration purposes.
@@ -7,18 +8,21 @@ import { createHash } from 'crypto';
  * The data stored here is not persisted and will be lost when the server restarts.
  */
 
-export interface CertificateDocument {
-    _id: string;
-    studentName: string;
-    rollNumber: string;
-    certificateId: string;
-    issueDate: string;
-    course: string;
-    institution: string;
-    certificateHash: string;
-    status: string;
-    createdAt: Date;
-}
+
+export const CertificateDocumentSchema = z.object({
+    _id: z.string(),
+    studentName: z.string(),
+    rollNumber: z.string(),
+    certificateId: z.string(),
+    issueDate: z.string(),
+    course: z.string(),
+    institution: z.string(),
+    certificateHash: z.string(),
+    status: z.string(),
+    createdAt: z.union([z.date(), z.string()]), // Allow both Date and string for serialization
+});
+export type CertificateDocument = z.infer<typeof CertificateDocumentSchema>;
+
 
 export interface UserDocument {
     _id: string;
@@ -39,7 +43,7 @@ export interface BlacklistDocument {
 // In-memory data stores
 export const certificates: CertificateDocument[] = [
     {
-        _id: '1',
+        _id: randomUUID(),
         studentName: 'Rohan Kumar',
         rollNumber: 'CS-123',
         certificateId: 'JHU-84321-2023',
