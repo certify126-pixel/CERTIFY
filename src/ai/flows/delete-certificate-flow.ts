@@ -14,7 +14,7 @@ import { z } from 'genkit';
 import { db } from '@/lib/in-memory-db';
 
 const DeleteCertificateInputSchema = z.object({
-  firestoreId: z.string().describe("The document ID of the certificate to delete."),
+  id: z.string().describe("The internal ID (_id) of the certificate to delete."),
 });
 export type DeleteCertificateInput = z.infer<typeof DeleteCertificateInputSchema>;
 
@@ -34,13 +34,13 @@ const deleteCertificateFlow = ai.defineFlow(
     inputSchema: DeleteCertificateInputSchema,
     outputSchema: DeleteCertificateOutputSchema,
   },
-  async ({ firestoreId }) => {
+  async ({ id }) => {
     try {
       const initialLength = db.certificates.length;
-      db.certificates = db.certificates.filter(c => c._id !== firestoreId);
+      db.certificates = db.certificates.filter(c => c._id !== id);
 
       if (db.certificates.length < initialLength) {
-        console.log(`Successfully deleted certificate with ID: ${firestoreId}`);
+        console.log(`Successfully deleted certificate with ID: ${id}`);
         return {
           success: true,
           message: 'Certificate has been successfully deleted.',

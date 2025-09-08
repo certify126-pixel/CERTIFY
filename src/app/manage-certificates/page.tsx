@@ -50,17 +50,17 @@ export default function ManageCertificatesPage() {
     fetchCertificates();
   }, [fetchCertificates]);
 
-  const handleDelete = async (firestoreId: string) => {
-    setIsDeleting(firestoreId);
+  const handleDelete = async (id: string) => {
+    setIsDeleting(id);
     try {
-      const result = await deleteCertificate({ firestoreId });
+      const result = await deleteCertificate({ id });
       if (result.success) {
         toast({
           title: "Success",
           description: "Certificate has been revoked.",
         });
         // Refresh the list after deletion
-        setCertificates(certs => certs.filter(c => c._id !== firestoreId));
+        setCertificates(certs => certs.filter(c => c._id !== id));
       } else {
         throw new Error(result.message);
       }
