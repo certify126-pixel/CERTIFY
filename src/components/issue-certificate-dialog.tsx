@@ -21,9 +21,10 @@ type IssueCertificateDialogProps = {
 export function IssueCertificateDialog({ onCertificateCreated }: IssueCertificateDialogProps) {
     const [open, setOpen] = React.useState(false);
     
-    const handleSuccess = () => {
-        onCertificateCreated();
-        setOpen(false);
+    // This function will be called by the form when the process is fully complete.
+    const handleClose = () => {
+        onCertificateCreated(); // Refresh the list in the parent
+        setOpen(false); // Close the dialog
     };
 
     return (
@@ -41,7 +42,7 @@ export function IssueCertificateDialog({ onCertificateCreated }: IssueCertificat
                         Manually create and issue a single new certificate record. The record will be permanently stored on the blockchain.
                     </DialogDescription>
                 </DialogHeader>
-                <IssueCertificateForm onSuccess={handleSuccess} />
+                <IssueCertificateForm onFinished={handleClose} />
             </DialogContent>
         </Dialog>
     );
