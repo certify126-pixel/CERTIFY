@@ -56,14 +56,12 @@ export default function ManageCertificatesPage() {
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                        <Link href={`/certificate/${cert.certificateId}`} passHref legacyBehavior>
-                           <Button variant="outline" size="icon" asChild>
-                                <a>
-                                    <Eye className="h-4 w-4"/>
-                                    <span className="sr-only">View Certificate</span>
-                                </a>
-                            </Button>
-                        </Link>
+                        <Button asChild variant="outline" size="icon">
+                            <Link href={`/certificate/${cert.certificateId}`}>
+                                <Eye className="h-4 w-4"/>
+                                <span className="sr-only">View Certificate</span>
+                            </Link>
+                        </Button>
                         <Button variant="outline" size="icon">
                             <FilePenLine className="h-4 w-4"/>
                             <span className="sr-only">Edit</span>
