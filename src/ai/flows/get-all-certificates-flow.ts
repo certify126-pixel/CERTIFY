@@ -30,7 +30,8 @@ const getAllCertificatesFlow = ai.defineFlow(
     return certificates.map(cert => ({
         ...cert,
         _id: cert._id.toString(),
-        createdAt: cert.createdAt.toISOString() as any, // Cast to avoid type issues with Zod/Flows
+        // Convert Date object to a string to prevent serialization errors
+        createdAt: cert.createdAt.toISOString() as any, 
     }));
   }
 );
