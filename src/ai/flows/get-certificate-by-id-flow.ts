@@ -44,11 +44,13 @@ const getCertificateByIdFlow = ai.defineFlow(
   },
   async ({ certificateId }) => {
     try {
+      // Correctly find the certificate by its public certificateId
       const certificate = db.certificates.find(c => c.certificateId === certificateId);
 
       if (certificate) {
         return certificate;
       } else {
+        console.warn(`Certificate not found with ID: ${certificateId}`);
         return null;
       }
     } catch (error: any) {
