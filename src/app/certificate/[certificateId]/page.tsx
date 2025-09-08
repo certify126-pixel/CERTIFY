@@ -5,6 +5,7 @@ import { CertificateTemplate } from '@/components/certificate-template';
 import { getCertificateById } from '@/ai/flows/get-certificate-by-id-flow';
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 type CertificateData = {
     _id: string;
@@ -18,16 +19,19 @@ type CertificateData = {
 };
 
 
-export default function CertificatePage({ params }: { params: { certificateId: string } }) {
+export default function CertificatePage() {
+    const params = useParams();
     const [certificate, setCertificate] = useState<CertificateData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const certificateId = params.certificateId as string;
+        
         const fetchCertificate = async () => {
             setLoading(true);
             try {
-                const result = await getCertificateById({ certificateId: params.certificateId });
+                const result = await getCertificateById({ certificateId });
                 if (result.success && result.certificate) {
                     // The flow returns an object, we need to cast it.
                     // A more robust solution might use a Zod schema on the client too.
@@ -42,7 +46,7 @@ export default function CertificatePage({ params }: { params: { certificateId: s
             }
         };
 
-        if (params.certificateId) {
+        if (certificateId) {
             fetchCertificate();
         }
     }, [params.certificateId]);
@@ -61,7 +65,7 @@ export default function CertificatePage({ params }: { params: { certificateId: s
     if (error) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-gray-200">
-                <div className="text-center text-red-600">
+                <div className="text-center text-red-600 p-8 bg-white rounded-lg shadow-xl">
                     <h2 className="text-2xl font-bold">Error</h2>
                     <p>{error}</p>
                 </div>
@@ -72,7 +76,7 @@ export default function CertificatePage({ params }: { params: { certificateId: s
     if (!certificate) {
          return (
              <div className="flex h-screen w-full items-center justify-center bg-gray-200">
-                <div className="text-center text-red-600">
+                <div className="text-center text-red-600 p-8 bg-white rounded-lg shadow-xl">
                     <h2 className="text-2xl font-bold">Not Found</h2>
                     <p>The requested certificate could not be found.</p>
                 </div>
